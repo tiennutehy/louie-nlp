@@ -2,7 +2,7 @@ package org.louie.ml.classifier.model;
 
 /**
  * The finite training or test sample of events. This includes contextual
- * predicates and an outcome(hand-tagged label).
+ * predicates and an outcome(hand-tagged class label).
  * 
  * @author Younggue Bae
  */
