@@ -101,6 +101,7 @@ public class LexRanker {
 		for (int i = 0; i < data.size(); ++i) {
 			for (int j = 0; j <= i; ++j) {
 				results[i][j] = results[j][i] = data.get(i).similarity(data.get(j));
+				System.out.println("similarity[" + i + "][" + j + "] == " + results[i][j]);
 			}
 		}
 		return results;
