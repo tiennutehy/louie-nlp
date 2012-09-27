@@ -96,12 +96,12 @@ public class LexRanker {
 	 * similarity function is symmetric.
 	 */
 	private static <T extends Similar<T>> double[][] similarityMatrix(List<T> data) {
-		System.out.println("data size == " + data.size());
 		double[][] results = new double[data.size()][data.size()];
+		System.out.println("similarityMatrix[data size == " + data.size() + "]");
 		for (int i = 0; i < data.size(); ++i) {
 			for (int j = 0; j <= i; ++j) {
 				results[i][j] = results[j][i] = data.get(i).similarity(data.get(j));
-				System.out.println("similarity[" + i + "][" + j + "] == " + results[i][j]);
+				//System.out.println("similarity[" + i + "][" + j + "] == " + results[i][j]);
 			}
 		}
 		return results;
@@ -115,6 +115,7 @@ public class LexRanker {
 	private static double[][] transitionProbabilities(double[][] similarities,
 			double similarityThreshold, boolean continuous) {
 		double[][] probabilities = new double[similarities.length][similarities[0].length];
+		System.out.println("transitionProbabilities[data size == " + probabilities.length + "]");
 		for (int i = 0; i < similarities.length; ++i) {
 			double sum = 0;
 			for (int j = 0; j < similarities[i].length; ++j) {
@@ -146,6 +147,9 @@ public class LexRanker {
 			return null;
 		}
 		double[][] result = new double[first.length][second[0].length];
+		
+		System.out.println("multMatrix[data size == " + result.length + "]");
+		
 		for (int i = 0; i < first.length; ++i) {
 			for (int j = 0; j < second[0].length; ++j) {
 				double sum = 0;
@@ -164,6 +168,9 @@ public class LexRanker {
 			return null;
 		}
 		double[][] result = new double[matrix[0].length][matrix.length];
+		
+		System.out.println("transposeMatrix[data size == " + result.length + "]");
+		
 		for (int i = 0; i < result.length; ++i) {
 			for (int j = 0; j < result[i].length; ++j) {
 				result[i][j] = matrix[j][i];
