@@ -96,6 +96,7 @@ public class LexRanker {
 	 * similarity function is symmetric.
 	 */
 	private static <T extends Similar<T>> double[][] similarityMatrix(List<T> data) {
+		System.out.println("data size == " + data.size());
 		double[][] results = new double[data.size()][data.size()];
 		for (int i = 0; i < data.size(); ++i) {
 			for (int j = 0; j <= i; ++j) {
