@@ -94,6 +94,14 @@ public class Dataset {
   }
   
   /**
+   * Returns the values associated with each event context or null if integer values are to be used. 
+   * @return the values associated with each event context.
+   */
+  public float[][] getValues() {
+  	return null;
+  }
+  
+  /**
    * Sorts and Remove duplicates with the array of comparable events and return the number of unique events.
    *
    * @param events the List of <code>Event</code> value
@@ -133,15 +141,14 @@ public class Dataset {
     outcomes = new int[numUniqueEvents];
     numTimesEventsSeen = new int[numUniqueEvents];
 
-    for (int i = 0, j = 0; i < numEvents; i++) {
+    for (int i = 0; i < numEvents; i++) {
       ComparableEvent evt = eventsToCompare.get(i);
       if (null == evt) {
         continue; // this was a dupe, skip over it.
       }
-      numTimesEventsSeen[j] = evt.seen;
-      outcomes[j] = evt.outcome;
-      contexts[j] = evt.predIndexes;
-      ++j;
+      numTimesEventsSeen[i] = evt.seen;
+      outcomes[i] = evt.outcome;
+      contexts[i] = evt.predIndexes;
     }
     return numUniqueEvents;
 	}
@@ -211,19 +218,4 @@ public class Dataset {
     return array;
   }
   
-  /**
-   * Gets the correction constant.
-   * 
-   * @return The correction constant.
-   */
-  public double getCorrectionConstant() {
-  	double correctionConstant = 0;
-  	for (int ei = 0; ei < contexts.length; ei++) {	// "ei" is an index of event.
-			if (contexts[ei].length > correctionConstant) {
-				correctionConstant = contexts[ei].length;
-			}
-  	}
-  	return correctionConstant;
-  }
-	
 }
