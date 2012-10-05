@@ -80,7 +80,9 @@ public class DocumentSummarizer {
 		for (String s : sentenceTexts) {
 			sentences.add(new Sentence(s, idf, words));
 		}
-		LexRankResults<Sentence> results = LexRankerOld.rank(sentences, 0.1, false);
+		//LexRankResults<Sentence> results = LexRankerOld.rank(sentences, 0.1, false);
+		LexRanker ranker = new LexRanker(0.1, 0.85, true);
+		LexRankResults<Sentence> results = ranker.rank(sentences, 0.0001, 50);
 
 		List<String> finalResults = new ArrayList<String>();
 		for (Sentence c : results.rankedResults) {

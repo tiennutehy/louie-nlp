@@ -90,15 +90,31 @@ public class LexRanker {
 			}
 		}
 		
-		double val;
+		double val, val1;
 		for (int i = 0; i < matrix.rowSize(); i++) {
 			for (int j = 0; j < matrix.columnSize(); j++) {
-				val = dampingFactor/dataSize + dampingFactor * matrix.get(i, j) / degree[i];
+				val = (double) dampingFactor/dataSize + dampingFactor * matrix.get(i, j) / degree[i];
+				//val = (double) 1/dataSize + 1 * matrix.get(i, j) / degree[i];
+				//val = 1/dataSize + 1 * matrix.get(i, j) / degree[i];
 				matrix.set(i, j, val);
 			}
 		}
 		
-		Vector rankings = powerMethod(matrix, dataSize, 0.0001, 50);
+		// Build the neighbor graph for the results.
+		for (int i = 0; i < data.size(); i++) {
+			for (int j = 0; j < data.size(); j++) {
+				if (matrix.get(i, j) > 0) {
+					List<T> neighborList = results.neighbors.get(data.get(i));
+					if (neighborList == null) {
+						neighborList = new ArrayList<T>();
+					}
+					neighborList.add(data.get(j));
+					results.neighbors.put(data.get(i), neighborList);
+				}
+			}
+		}
+		
+		Vector rankings = powerMethod(matrix, dataSize, tolerance, maxIteration);
 		
 		// Now that we have the LexRank scores, arrange them for the results.
 		List<RankPair<T>> tempList = new ArrayList<RankPair<T>>();
@@ -133,29 +149,32 @@ public class LexRanker {
 	 *          (Yeah, proper grammar right there)
 	 * @return Vector
 	 */
-	private static Vector powerMethod(Matrix stochasticMatrix, int size, double tolerance,
+	@SuppressWarnings("unused")
+	private Vector powerMethod(Matrix stochasticMatrix, int size, double tolerance,
 			int maxIteration) {
 		Vector p0 = new DenseVector(size);
 		Vector p1 = new DenseVector(size);
 
 		for (int i = 0; i < size; i++) {
-			p0.set(i, 1 / size);
+			p0.set(i, (double) 1 / size);
 		}
 		Matrix mt = stochasticMatrix.transpose();
-		//Vector pMinus;
+		Vector pMinus;
 		p1 = mt.times(p0);
-		//pMinus = p1.minus(p0);
+		
+		pMinus = p1.minus(p0);
 
 		int iteration = 0;
 		while (iteration < maxIteration) {
-			p0 = p1;
+			p0 = p1.clone();
 			p1 = mt.times(p0);
-			//pMinus = p1.minus(p0);
+			pMinus = p1.minus(p0);
 			
 			if (p1.getDistanceSquared(p0) < tolerance) {
 				break;
 			}
 			
+			iteration++;
 		}
 		return p1;
 	}
