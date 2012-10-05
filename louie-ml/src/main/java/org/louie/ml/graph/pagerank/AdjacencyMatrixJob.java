@@ -99,6 +99,7 @@ public class AdjacencyMatrixJob extends AbstractJob {
     Job createAdjacencyMatrix = prepareJob(edges, getOutputPath(ADJACENCY_MATRIX), TextInputFormat.class,
     		VectorizeEdgesMapper.class, IntWritable.class, VectorWritable.class, VectorSumReducer.class,
         IntWritable.class, VectorWritable.class, SequenceFileOutputFormat.class);
+    createAdjacencyMatrix.setJarByClass(AdjacencyMatrixJob.class);
     createAdjacencyMatrix.setCombinerClass(VectorSumReducer.class);
     Configuration createAdjacencyMatrixConf = createAdjacencyMatrix.getConfiguration();
     createAdjacencyMatrixConf.set(NUM_VERTICES_PARAM, String.valueOf(numVertices));
@@ -136,7 +137,7 @@ public class AdjacencyMatrixJob extends AbstractJob {
     return index;
   }
 
-	public static class VectorizeEdgesMapper extends Mapper<LongWritable, Text, IntWritable, VectorWritable> {
+	static class VectorizeEdgesMapper extends Mapper<LongWritable, Text, IntWritable, VectorWritable> {
 
     private int numVertices;
     private OpenIntIntHashMap vertexIDsToIndex;
