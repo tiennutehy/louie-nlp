@@ -30,14 +30,10 @@ public final class PageRankJobTest extends AbstractJob {
 
     Configuration conf = new Configuration();
     conf.set("mapred.child.java.opts", "-Xmx1024m");
+    setConf(conf);
     
     HadoopUtil.delete(conf, new Path(outputDir));
     HadoopUtil.delete(conf, new Path(tempDir));
-    
-    Job job = new Job(conf);
-    
-    job.setJobName("PageRank job test");
-    job.setJarByClass(PageRankJobTest.class);
 
     ToolRunner.run(conf, new PageRankJob(), new String[] { "--vertices", verticesFile, "--edges", edgesFile,
         "--output", outputDir, "--numIterations", "3", "--stayingProbability", "0.8",
@@ -50,8 +46,6 @@ public final class PageRankJobTest extends AbstractJob {
       String[] tokens = Iterables.toArray(Splitter.on("\t").split(line), String.class);
       rankPerVertex.put(Integer.parseInt(tokens[0]), Double.parseDouble(tokens[1]));
     }
-    
-    job.waitForCompletion(true);
     
     return 0;
   }
