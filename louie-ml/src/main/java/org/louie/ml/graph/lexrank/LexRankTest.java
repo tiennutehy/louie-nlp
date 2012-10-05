@@ -27,15 +27,17 @@ public class LexRankTest {
 				{ 0.00, 0.00, 0.00, 0.00, 0.15, 0.00, 0.00, 0.15, 0.35, 0.15, 1.00 }, };
 		
 		List<DummyItem> items = new ArrayList<DummyItem>();
-		for (int i = 0; i < similarity.length; ++i) {
+		for (int i = 0; i < similarity.length; i++) {
 			items.add(new DummyItem(i, similarity));
 		}
 		
-		LexRankResults<DummyItem> results = LexRankerOld.rank(items, 0.1, false);
+		//LexRankResults<DummyItem> results = LexRankerOld.rank(items, 0.1, false);
+		LexRanker ranker = new LexRanker(0.1, 0.85, true);
+		LexRankResults<DummyItem> results = ranker.rank(items, 0.0001, 100);
 		String[] names = { "d1s1", "d2s1", "d2s2", "d2s3", "d3s1", "d3s2", "d3s3", "d4s1", "d5s1", "d5s2", "d5s3" };
 		
 		double max = results.scores.get(results.rankedResults.get(0));
-		for (int i = 0; i < similarity.length; ++i) {
+		for (int i = 0; i < similarity.length; i++) {
 			System.out.println(names[i] + ": " + (results.scores.get(items.get(i)) / max));
 		}
 	}

@@ -14,7 +14,7 @@ import java.util.ArrayList;
 public class DocumentSummarizerTest {
 	public static void main(String[] args) {
 		args = new String[1];
-		args[0] = "./iphone4_comments.txt";
+		args[0] = "./sample_data/iphone4_comments.txt";
 		
 		List<String> sentences = new ArrayList<String>();
 		String line = "";
