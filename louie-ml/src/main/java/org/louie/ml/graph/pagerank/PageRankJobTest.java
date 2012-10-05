@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.HadoopUtil;
@@ -29,7 +28,6 @@ public final class PageRankJobTest extends AbstractJob {
     String tempDir = "/user/louie/fishisland/output/temp";
 
     Configuration conf = new Configuration();
-    conf.set("mapred.child.java.opts", "-Xmx1024m");
     setConf(conf);
     
     HadoopUtil.delete(conf, new Path(outputDir));

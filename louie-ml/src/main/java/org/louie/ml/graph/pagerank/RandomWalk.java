@@ -82,6 +82,7 @@ abstract class RandomWalk extends AbstractJob {
     /* transpose and stochastify the adjacency matrix to create the transition matrix */
     Job createTransitionMatrix = prepareJob(adjacencyMatrixPath, transitionMatrixPath, TransposeMapper.class,
         IntWritable.class, VectorWritable.class, MergeVectorsReducer.class, IntWritable.class, VectorWritable.class);
+    createTransitionMatrix.setJarByClass(RandomWalk.class);
     createTransitionMatrix.setCombinerClass(MergeVectorsCombiner.class);
     createTransitionMatrix.getConfiguration().set(NUM_VERTICES_PARAM, String.valueOf(numVertices));
     createTransitionMatrix.getConfiguration().set(STAYING_PROBABILITY_PARAM, String.valueOf(stayingProbability));
@@ -103,6 +104,7 @@ abstract class RandomWalk extends AbstractJob {
 
     Job vertexWithPageRank = prepareJob(vertexIndexPath, getOutputPath(), SequenceFileInputFormat.class,
         RankPerVertexMapper.class, LongWritable.class, DoubleWritable.class, TextOutputFormat.class);
+    vertexWithPageRank.setJarByClass(RandomWalk.class);
     vertexWithPageRank.getConfiguration().set(RankPerVertexMapper.RANK_PATH_PARAM,
         getTempPath(RANK_VECTOR).toString());
     vertexWithPageRank.waitForCompletion(true);
