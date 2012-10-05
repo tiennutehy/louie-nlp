@@ -50,7 +50,7 @@ public class RandomWalkWithRestartJob extends RandomWalk {
 
   @Override
   protected void evaluateSpecificOptions(Map<String, List<String>> parsedArgs) {
-    sourceVertexIndex = Integer.parseInt(getOption("--sourceVertexIndex"));
+    sourceVertexIndex = Integer.parseInt(getOption("sourceVertexIndex"));
   }
 
 }

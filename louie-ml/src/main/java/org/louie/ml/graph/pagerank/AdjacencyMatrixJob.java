@@ -84,9 +84,9 @@ public class AdjacencyMatrixJob extends AbstractJob {
       return -1;
     }
 
-    Path vertices = new Path(getOption("--vertices"));
-    Path edges = new Path(getOption("--edges"));
-    boolean symmetric = Boolean.parseBoolean(getOption("--symmetric"));
+    Path vertices = new Path(getOption("vertices"));
+    Path edges = new Path(getOption("edges"));
+    boolean symmetric = Boolean.parseBoolean(getOption("symmetric"));
 
     log.info("Indexing vertices sequentially, this might take a while...");
     int numVertices = indexVertices(vertices, getOutputPath(VERTEX_INDEX));
