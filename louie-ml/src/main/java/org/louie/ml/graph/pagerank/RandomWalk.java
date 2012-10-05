@@ -121,7 +121,7 @@ abstract class RandomWalk extends AbstractJob {
     }
   }
 
-  static class TransposeMapper extends Mapper<IntWritable,VectorWritable,IntWritable,VectorWritable> {
+  public static class TransposeMapper extends Mapper<IntWritable, VectorWritable, IntWritable,  VectorWritable> {
 
     private int numVertices;
     private double stayingProbability;
@@ -154,7 +154,7 @@ abstract class RandomWalk extends AbstractJob {
   }
 
 
-  public static class RankPerVertexMapper extends Mapper<IntWritable,IntWritable,IntWritable,DoubleWritable> {
+  public static class RankPerVertexMapper extends Mapper<IntWritable, IntWritable, IntWritable, DoubleWritable> {
 
     static final String RANK_PATH_PARAM = RankPerVertexMapper.class.getName() + ".pageRankPath";
 
