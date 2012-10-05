@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.HadoopUtil;
 import org.apache.mahout.common.iterator.FileLineIterable;
@@ -45,6 +46,10 @@ public final class PageRankJobTest extends AbstractJob {
     
     return 0;
   }
+  
+	public static void main(String[] args) throws Exception {
+		ToolRunner.run(new PageRankJobTest(), args);
+	}
 
 }
 
