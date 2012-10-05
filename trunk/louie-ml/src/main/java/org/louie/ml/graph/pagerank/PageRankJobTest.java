@@ -22,8 +22,8 @@ public final class PageRankJobTest extends AbstractJob {
   @Override
 	public int run(String[] args) throws Exception {
 
-    String verticesFile = "/user/louie/fishisland/output/vertices.txt";
-    String edgesFile = "/user/louie/fishisland/output/edges.txt";
+    String verticesFile = "/user/louie/fishisland/output/graph/vertices.txt";
+    String edgesFile = "/user/louie/fishisland/output/graph/edges.txt";
     String outputDir = "/user/louie/fishisland/output/pagerank";
     String tempDir = "/user/louie/fishisland/output/temp";
 
