@@ -121,7 +121,7 @@ abstract class RandomWalk extends AbstractJob {
     }
   }
 
-  public static class TransposeMapper extends Mapper<IntWritable, VectorWritable, IntWritable,  VectorWritable> {
+  static class TransposeMapper extends Mapper<IntWritable, VectorWritable, IntWritable,  VectorWritable> {
 
     private int numVertices;
     private double stayingProbability;
