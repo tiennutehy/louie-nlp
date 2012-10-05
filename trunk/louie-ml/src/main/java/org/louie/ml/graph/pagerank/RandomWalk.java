@@ -61,8 +61,8 @@ abstract class RandomWalk extends AbstractJob {
 
     evaluateSpecificOptions(parsedArgs);
 
-    int numIterations = Integer.parseInt(getOption("--numIterations"));
-    double stayingProbability = Double.parseDouble(getOption("--stayingProbability"));
+    int numIterations = Integer.parseInt(getOption("numIterations"));
+    double stayingProbability = Double.parseDouble(getOption("stayingProbability"));
 
     Preconditions.checkArgument(numIterations > 0);
     Preconditions.checkArgument(stayingProbability > 0.0 && stayingProbability <= 1.0);
@@ -73,8 +73,8 @@ abstract class RandomWalk extends AbstractJob {
     Path numVerticesPath = getTempPath(AdjacencyMatrixJob.NUM_VERTICES);
 
     /* create the adjacency matrix */
-    ToolRunner.run(getConf(), new AdjacencyMatrixJob(), new String[] { "--vertices", getOption("--vertices"),
-        "--edges", getOption("--edges"), "--output", getTempPath().toString() });
+    ToolRunner.run(getConf(), new AdjacencyMatrixJob(), new String[] { "--vertices", getOption("vertices"),
+        "--edges", getOption("edges"), "--output", getTempPath().toString() });
 
     int numVertices = HadoopUtil.readInt(numVerticesPath, getConf());
     Preconditions.checkArgument(numVertices > 0);
