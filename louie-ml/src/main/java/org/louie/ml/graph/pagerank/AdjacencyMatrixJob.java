@@ -96,7 +96,7 @@ public class AdjacencyMatrixJob extends AbstractJob {
 
     log.info("Found " + numVertices + " vertices, creating adjacency matrix...");
     Job createAdjacencyMatrix = prepareJob(edges, getOutputPath(ADJACENCY_MATRIX), TextInputFormat.class,
-        VectorizeEdgesMapper.class, IntWritable.class, VectorWritable.class, VectorSumReducer.class,
+    		AdjacencyMatrixJob.VectorizeEdgesMapper.class, IntWritable.class, VectorWritable.class, VectorSumReducer.class,
         IntWritable.class, VectorWritable.class, SequenceFileOutputFormat.class);
     createAdjacencyMatrix.setCombinerClass(VectorSumReducer.class);
     Configuration createAdjacencyMatrixConf = createAdjacencyMatrix.getConfiguration();
