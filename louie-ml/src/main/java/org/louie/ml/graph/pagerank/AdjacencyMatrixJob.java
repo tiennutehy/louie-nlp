@@ -135,7 +135,7 @@ public class AdjacencyMatrixJob extends AbstractJob {
     return index;
   }
 
-  static class VectorizeEdgesMapper extends Mapper<LongWritable, Text, IntWritable, VectorWritable> {
+  public static class VectorizeEdgesMapper extends Mapper<LongWritable, Text, IntWritable, VectorWritable> {
 
     private int numVertices;
     private OpenIntIntHashMap vertexIDsToIndex;
