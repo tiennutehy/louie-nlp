@@ -29,6 +29,9 @@ public final class PageRankJobTest extends AbstractJob {
 
     Configuration conf = new Configuration();
     conf.set("mapred.child.java.opts", "-Xmx1024m");
+    
+    HadoopUtil.delete(conf, new Path(outputDir));
+    HadoopUtil.delete(conf, new Path(tempDir));
 
     PageRankJob pageRank = new PageRankJob();
     pageRank.setConf(conf);
