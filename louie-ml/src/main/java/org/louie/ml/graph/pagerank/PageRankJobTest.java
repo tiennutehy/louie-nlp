@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.HadoopUtil;
@@ -32,6 +33,11 @@ public final class PageRankJobTest extends AbstractJob {
     
     HadoopUtil.delete(conf, new Path(outputDir));
     HadoopUtil.delete(conf, new Path(tempDir));
+    
+    Job job = new Job(conf);
+    
+    job.setJobName("PageRank job test");
+    job.setJarByClass(PageRankJobTest.class);
 
     PageRankJob pageRank = new PageRankJob();
     pageRank.setConf(conf);
