@@ -22,5 +22,5 @@ export HADOOP_CLASSPATH=/home1/louie09/workspace/louie-ml/hadoop-lib/mahout-core
 echo $HADOOP_CLASSPATH
 
 echo "MapReduce job for PageRank test"
-hadoop jar ./target/louie-ml-0.0.1-SNAPSHOT.jar org.louie.ml.graph.pagerank.PageRanJobTest \
+hadoop jar ./target/louie-ml-0.0.1-SNAPSHOT.jar org.louie.ml.graph.pagerank.PageRankJobTest \
 -libjars /home1/louie09/workspace/louie-ml/hadoop-lib/mahout-core-0.8-SNAPSHOT.jar
