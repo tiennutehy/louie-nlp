@@ -39,9 +39,7 @@ public final class PageRankJobTest extends AbstractJob {
     job.setJobName("PageRank job test");
     job.setJarByClass(PageRankJobTest.class);
 
-    PageRankJob pageRank = new PageRankJob();
-    pageRank.setConf(conf);
-    pageRank.run(new String[] { "--vertices", verticesFile, "--edges", edgesFile,
+    ToolRunner.run(conf, new PageRankJob(), new String[] { "--vertices", verticesFile, "--edges", edgesFile,
         "--output", outputDir, "--numIterations", "3", "--stayingProbability", "0.8",
         "--tempDir", tempDir });
 
@@ -52,6 +50,8 @@ public final class PageRankJobTest extends AbstractJob {
       String[] tokens = Iterables.toArray(Splitter.on("\t").split(line), String.class);
       rankPerVertex.put(Integer.parseInt(tokens[0]), Double.parseDouble(tokens[1]));
     }
+    
+    job.waitForCompletion(true);
     
     return 0;
   }
