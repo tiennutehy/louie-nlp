@@ -26,7 +26,7 @@ public final class PageRankJobTest extends AbstractJob {
   @Override
 	public int run(String[] args) throws Exception {
   	
-    addOutputOption();
+  	addOption("output", null, "output path directory", true);
     addOption("vertices", null, "a text file containing all vertices of the graph (one per line)", true);
     addOption("edges", null, "edges of the graph", true);
     addOption("numIterations", "it", "number of numIterations", String.valueOf(10));
