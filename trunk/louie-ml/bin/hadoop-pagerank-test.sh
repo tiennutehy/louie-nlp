@@ -21,7 +21,7 @@ export HADOOP_CLASSPATH=/home1/louie09/tc/louie-ml/hadoop-lib/mahout-core-0.8-SN
 
 echo $HADOOP_CLASSPATH
 
-echo "MapReduce job for PageRank test"
+echo "MapReduce job for PageRank......"
 hadoop fs -rmr /user/louie/fishisland/output/pagerank >& /dev/null || true
 hadoop fs -rmr /user/louie/fishisland/output/temp >& /dev/null || true
 
