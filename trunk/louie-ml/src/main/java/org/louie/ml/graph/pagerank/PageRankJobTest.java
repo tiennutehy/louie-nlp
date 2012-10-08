@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.HadoopUtil;
@@ -38,6 +39,9 @@ public final class PageRankJobTest extends AbstractJob {
 
     Configuration conf = new Configuration();
     setConf(conf);
+    
+    Job job = new Job(conf);
+    job.setJarByClass(PageRankJobTest.class);
 
     ToolRunner.run(conf, new PageRankJob(), new String[] { "--vertices", getOption("vertices"), "--edges", getOption("edges"),
         "--output", getOption("output"), "--numIterations", getOption("numIterations"), "--stayingProbability", getOption("stayingProbability"),
