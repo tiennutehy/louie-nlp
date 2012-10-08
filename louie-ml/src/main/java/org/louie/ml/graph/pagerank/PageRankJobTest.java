@@ -27,6 +27,7 @@ public final class PageRankJobTest extends AbstractJob {
 	public int run(String[] args) throws Exception {
   	
   	addOption("output", null, "output path directory", true);
+  	addOption("tempDir", null, "temp path directory", true);
     addOption("vertices", null, "a text file containing all vertices of the graph (one per line)", true);
     addOption("edges", null, "edges of the graph", true);
     addOption("numIterations", "it", "number of numIterations", String.valueOf(10));
@@ -42,10 +43,13 @@ public final class PageRankJobTest extends AbstractJob {
     
     Job job = new Job(conf);
     job.setJarByClass(PageRankJobTest.class);
+    job.waitForCompletion(true);
+    
 
     ToolRunner.run(conf, new PageRankJob(), new String[] { "--vertices", getOption("vertices"), "--edges", getOption("edges"),
         "--output", getOption("output"), "--numIterations", getOption("numIterations"), "--stayingProbability", getOption("stayingProbability"),
         "--tempDir", getTempPath().toString() });
+    
 
     int numVertices = HadoopUtil.readInt(new Path(getOption("tempDir"), AdjacencyMatrixJob.NUM_VERTICES), conf);
 
