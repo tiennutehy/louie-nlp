@@ -40,7 +40,7 @@ hadoop jar ./target/louie-ml-0.0.1-SNAPSHOT.jar org.louie.ml.graph.pagerank.Page
 --vertices "/user/louie/fishisland/output/graph/vertices.txt" \
 --edges "/user/louie/fishisland/output/graph/edges.txt" \
 --output "/user/louie/fishisland/output/pagerank" \
---tempPath "/user/louie/fishisland/output/temp" \
+--tempDir "/user/louie/fishisland/output/temp" \
 --numIterations "3" \
 --stayingProbability "0.8";
 
