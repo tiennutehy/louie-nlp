@@ -32,8 +32,7 @@ hadoop fs -rmr /user/louie/fishisland/output/temp >& /dev/null || true
 #--edges "/user/louie/fishisland/output/graph/edges.txt" \
 #--output "/user/louie/fishisland/output/pagerank" \
 #--numIterations "3" \
-#--stayingProbability "0.8" \
-#--tempDir "/user/louie/fishisland/output/temp";
+#--stayingProbability "0.8";
 
 hadoop jar ./target/louie-ml-0.0.1-SNAPSHOT.jar org.louie.ml.graph.pagerank.PageRankJobTest \
 -libjars /home1/louie09/tc/louie-ml/hadoop-lib/mahout-core-0.8-SNAPSHOT-job.jar \
@@ -42,7 +41,6 @@ hadoop jar ./target/louie-ml-0.0.1-SNAPSHOT.jar org.louie.ml.graph.pagerank.Page
 --edges "/user/louie/fishisland/output/graph/edges.txt" \
 --output "/user/louie/fishisland/output/pagerank" \
 --numIterations "3" \
---stayingProbability "0.8" \
---tempDir "/user/louie/fishisland/output/temp";
+--stayingProbability "0.8";
 
 
