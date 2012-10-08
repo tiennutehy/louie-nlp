@@ -28,7 +28,6 @@ public final class PageRankJobTest extends AbstractJob {
     addOutputOption();
     addOption("vertices", null, "a text file containing all vertices of the graph (one per line)", true);
     addOption("edges", null, "edges of the graph", true);
-    addOption("output", null, "output file path", true);
     addOption("numIterations", "it", "number of numIterations", String.valueOf(10));
     addOption("stayingProbability", "tp", "probability not to teleport to a random vertex", String.valueOf(0.85));
 
