@@ -45,12 +45,13 @@ public final class PageRankJobTest extends AbstractJob {
     job.setJarByClass(PageRankJobTest.class);
     job.waitForCompletion(true);
     
-
-    ToolRunner.run(conf, new PageRankJob(), new String[] { "--vertices", getOption("vertices"), "--edges", getOption("edges"),
+    PageRankJob pageRank = new PageRankJob();
+    pageRank.setConf(conf);
+    
+    pageRank.run(new String[] { "--vertices", getOption("vertices"), "--edges", getOption("edges"),
         "--output", getOption("output"), "--numIterations", getOption("numIterations"), "--stayingProbability", getOption("stayingProbability"),
         "--tempDir", getTempPath().toString() });
     
-
     int numVertices = HadoopUtil.readInt(new Path(getOption("tempDir"), AdjacencyMatrixJob.NUM_VERTICES), conf);
 
     Map<Integer,Double> rankPerVertex = Maps.newHashMapWithExpectedSize(numVertices);
