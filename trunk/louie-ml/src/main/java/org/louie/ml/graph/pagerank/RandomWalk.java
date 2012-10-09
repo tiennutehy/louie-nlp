@@ -83,7 +83,7 @@ abstract class RandomWalk extends AbstractJob {
     /* create the adjacency matrix */
     ToolRunner.run(getConf(), new AdjacencyMatrixJob(), new String[] { "--vertices", getOption("vertices"),
         "--edges", getOption("edges"), "--output", getTempPath().toString(), 
-        "--edgeWeightUse", getOption("edgeWeightUse"), 
+        "--continuous", getOption("continuous"), 
         "--edgeWeightField", getOption("edgeWeightField"), 
         "--edgeWeightThreshold", getOption("edgeWeightThreshold") });
 
