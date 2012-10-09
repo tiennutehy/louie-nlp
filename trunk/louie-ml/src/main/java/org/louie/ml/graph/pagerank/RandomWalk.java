@@ -37,6 +37,11 @@ abstract class RandomWalk extends AbstractJob {
   static final String RANK_VECTOR = "rankVector";
 
   static final String NUM_VERTICES_PARAM = AdjacencyMatrixJob.class.getName() + ".numVertices";
+  
+  /*
+   * A damping factor which is typically chosen in the interval [0.8,0.9].
+   * Probability not to teleport to a random vertex.
+   */
   static final String STAYING_PROBABILITY_PARAM = AdjacencyMatrixJob.class.getName() + ".stayingProbability";
 
   protected abstract Vector createDampingVector(int numVertices, double stayingProbability);
@@ -51,6 +56,9 @@ abstract class RandomWalk extends AbstractJob {
     addOption("edges", null, "edges of the graph", true);
     addOption("numIterations", "it", "number of numIterations", String.valueOf(10));
     addOption("stayingProbability", "tp", "probability not to teleport to a random vertex", String.valueOf(0.85));
+    addOption("continuous", null, "use a continuous version of the PageRank", String.valueOf(false));
+    addOption("edgeWeightField", null, "a field index with weight in edges input file", String.valueOf(-1));
+    addOption("edgeWeightThreshold", null, "a edge weight threshold", String.valueOf(-1));
 
     addSpecificOptions();
 
@@ -74,7 +82,10 @@ abstract class RandomWalk extends AbstractJob {
 
     /* create the adjacency matrix */
     ToolRunner.run(getConf(), new AdjacencyMatrixJob(), new String[] { "--vertices", getOption("vertices"),
-        "--edges", getOption("edges"), "--output", getTempPath().toString() });
+        "--edges", getOption("edges"), "--output", getTempPath().toString(), 
+        "--edgeWeightUse", getOption("edgeWeightUse"), 
+        "--edgeWeightField", getOption("edgeWeightField"), 
+        "--edgeWeightThreshold", getOption("edgeWeightThreshold") });
 
     int numVertices = HadoopUtil.readInt(numVerticesPath, getConf());
     Preconditions.checkArgument(numVertices > 0);
@@ -128,7 +139,8 @@ abstract class RandomWalk extends AbstractJob {
     private int numVertices;
     private double stayingProbability;
 
-    @Override
+    @SuppressWarnings("rawtypes")
+		@Override
     protected void setup(Mapper.Context ctx) throws IOException, InterruptedException {
       stayingProbability = Double.parseDouble(ctx.getConfiguration().get(STAYING_PROBABILITY_PARAM));
       numVertices = Integer.parseInt(ctx.getConfiguration().get(NUM_VERTICES_PARAM));
@@ -174,7 +186,8 @@ abstract class RandomWalk extends AbstractJob {
       }
     }
 
-    @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+		@Override
     protected void map(IntWritable index, IntWritable vertex, Mapper.Context ctx)
         throws IOException, InterruptedException {
       ctx.write(vertex, new DoubleWritable(ranks.get(index.get())));
