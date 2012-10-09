@@ -65,6 +65,22 @@ public class AdjacencyMatrixJob extends AbstractJob {
   static final String VERTEX_INDEX_PARAM = AdjacencyMatrixJob.class.getName() + ".vertexIndex";
   static final String SYMMETRIC_PARAM = AdjacencyMatrixJob.class.getName() + ".symmetric";
   
+  /*
+   * Whether or not to use a continuous version of the PageRank algorithm, 
+   * If set to true, transition value will be set to edge weight value in adjacency matrix, 
+   * otherwise, the transition value will be set to 1.
+   */
+  static final String CONTINUOUS = AdjacencyMatrixJob.class.getName() + ".continuous";
+  /*
+   * A field index with edge weight in edges input file.
+   */
+	static final String EDGE_WEIGHT_FIELD = AdjacencyMatrixJob.class.getName() + ".edgeWeightField";
+	/*
+	 * A edge weight threshold how two vertices must be to be considered "connected".
+	 * This is only used in the continuous version of PageRank.
+	 */
+	static final String EDGE_WEIGHT_THRESHOLD = AdjacencyMatrixJob.class.getName() + ".edgeWeightThreshold";
+	
   private static final Pattern SEPARATOR = Pattern.compile("[\t,]");
 
   public static void main(String[] args) throws Exception {
@@ -78,6 +94,9 @@ public class AdjacencyMatrixJob extends AbstractJob {
     addOption("edges", null, "text files containing the edges of the graph (vertexA,vertexB per line)", true);
     addOption("symmetric", null, "produce a symmetric adjacency matrix (corresponds to an undirected graph)",
         String.valueOf(false));
+    addOption("continuous", null, "use a continuous version of the PageRank", String.valueOf(false));
+    addOption("edgeWeightField", null, "a field index with weight in edges input file", String.valueOf(-1));
+    addOption("edgeWeightThreshold", null, "a edge weight threshold", String.valueOf(-1));
 
     addOutputOption();
 
@@ -89,7 +108,7 @@ public class AdjacencyMatrixJob extends AbstractJob {
     Path vertices = new Path(getOption("vertices"));
     Path edges = new Path(getOption("edges"));
     boolean symmetric = Boolean.parseBoolean(getOption("symmetric"));
-
+    
     log.info("Indexing vertices sequentially, this might take a while...");
     int numVertices = indexVertices(vertices, getOutputPath(VERTEX_INDEX));
 
@@ -107,6 +126,9 @@ public class AdjacencyMatrixJob extends AbstractJob {
     createAdjacencyMatrixConf.set(NUM_VERTICES_PARAM, String.valueOf(numVertices));
     createAdjacencyMatrixConf.set(VERTEX_INDEX_PARAM, getOutputPath(VERTEX_INDEX).toString());
     createAdjacencyMatrixConf.setBoolean(SYMMETRIC_PARAM, symmetric);
+    createAdjacencyMatrixConf.set(CONTINUOUS, getOption("continuous"));
+    createAdjacencyMatrixConf.set(EDGE_WEIGHT_FIELD, getOption("edgeWeightField"));
+    createAdjacencyMatrixConf.set(EDGE_WEIGHT_THRESHOLD, getOption("edgeWeightThreshold"));
     createAdjacencyMatrix.waitForCompletion(true);
 
     return 0;
@@ -150,6 +172,10 @@ public class AdjacencyMatrixJob extends AbstractJob {
     private final IntWritable row = new IntWritable();
 
     private static final Pattern SEPARATOR = Pattern.compile("[\t,]");
+    
+    private boolean continuous;
+    private int edgeWeightFieldIndex;
+    private double edgeWeightThreshold;
 
     @Override
     protected void setup(Context ctx) throws IOException, InterruptedException {
@@ -158,30 +184,63 @@ public class AdjacencyMatrixJob extends AbstractJob {
       symmetric = conf.getBoolean(SYMMETRIC_PARAM, false);
       Path vertexIndexPath = new Path(conf.get(VERTEX_INDEX_PARAM));
       vertexIDsToIndex = new OpenIntIntHashMap(numVertices);
+      continuous = conf.getBoolean(CONTINUOUS, false);
+      edgeWeightFieldIndex = conf.getInt(EDGE_WEIGHT_FIELD, -1);
+      edgeWeightThreshold = Double.parseDouble(conf.get(EDGE_WEIGHT_THRESHOLD));
+
       for (Pair<IntWritable,IntWritable> indexAndVertexID :
           new SequenceFileIterable<IntWritable,IntWritable>(vertexIndexPath, true, conf)) {
         vertexIDsToIndex.put(indexAndVertexID.getSecond().get(), indexAndVertexID.getFirst().get());
       }
     }
 
-    @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+		@Override
     protected void map(LongWritable offset, Text line, Mapper.Context ctx)
         throws IOException, InterruptedException {
 
       String[] tokens = SEPARATOR.split(line.toString());
       int rowIndex = vertexIDsToIndex.get(Integer.parseInt(tokens[0]));
       int columnIndex = vertexIDsToIndex.get(Integer.parseInt(tokens[1]));
-
+      
+      double edgeWeight = 0.0;
+      if (edgeWeightFieldIndex >= 0) {
+      	edgeWeight = Double.parseDouble(tokens[edgeWeightFieldIndex]);
+      }
+      
       Vector partialTransitionMatrixRow = new SequentialAccessSparseVector(numVertices, 1);
-      row.set(rowIndex);
-      partialTransitionMatrixRow.setQuick(columnIndex, 1);
-      ctx.write(row, new VectorWritable(partialTransitionMatrixRow));
+      if (!continuous) {
+        row.set(rowIndex);
 
-      if (symmetric && rowIndex != columnIndex) {
-        partialTransitionMatrixRow = new SequentialAccessSparseVector(numVertices, 1);
-        row.set(columnIndex);
-        partialTransitionMatrixRow.setQuick(rowIndex, 1);
+      	if (edgeWeight > edgeWeightThreshold) {
+      		partialTransitionMatrixRow.setQuick(columnIndex, 1);
+      	}
         ctx.write(row, new VectorWritable(partialTransitionMatrixRow));
+
+        if (symmetric && rowIndex != columnIndex) {
+          partialTransitionMatrixRow = new SequentialAccessSparseVector(numVertices, 1);
+          row.set(columnIndex);
+        	if (edgeWeight > edgeWeightThreshold) {
+        		 partialTransitionMatrixRow.setQuick(rowIndex, 1);
+        	}
+          ctx.write(row, new VectorWritable(partialTransitionMatrixRow));
+        }    	
+      }
+      else {
+      	row.set(rowIndex);
+    		if (edgeWeight > edgeWeightThreshold) {
+    			partialTransitionMatrixRow.setQuick(columnIndex, edgeWeight);
+    		}
+        ctx.write(row, new VectorWritable(partialTransitionMatrixRow));
+
+        if (symmetric && rowIndex != columnIndex) {
+          partialTransitionMatrixRow = new SequentialAccessSparseVector(numVertices, 1);
+          row.set(columnIndex);
+        	if (edgeWeight > edgeWeightThreshold) {
+        		partialTransitionMatrixRow.setQuick(rowIndex, edgeWeight);
+        	}
+          ctx.write(row, new VectorWritable(partialTransitionMatrixRow));
+        }
       }
     }
   }

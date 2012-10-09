@@ -29,7 +29,7 @@ public class LexRanker {
 	 *          how similar two items must be to be considered "connected". The
 	 *          LexRank paper suggests a value of 0.1.
    * @param dampingFactor 
-   * 					damping factor which is typically chosen in the interval [0.1,0.2]
+   * 					damping factor which is typically chosen in the interval [0.8,0.9]
 	 * @param continuous
 	 *          whether or not to use a continuous version of the LexRank
 	 *          algorithm, If set to false, all similarity links above the
