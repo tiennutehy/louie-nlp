@@ -38,8 +38,6 @@ import com.google.common.io.Closeables;
  */
 public class PageRankWithVertexValueJob extends RandomWalk {
 
-  private int vertexValueFieldIndex;
-
   public static void main(String[] args) throws Exception {
     ToolRunner.run(new PageRankWithVertexValueJob(), args);
   }
@@ -62,8 +60,9 @@ public class PageRankWithVertexValueJob extends RandomWalk {
   }
 
   @Override
+  @SuppressWarnings("unused")
   protected void evaluateSpecificOptions(Map<String, List<String>> parsedArgs) {
-  	vertexValueFieldIndex = Integer.parseInt(getOption("vertexValueField"));
+		int vertexValueFieldIndex = Integer.parseInt(getOption("vertexValueField"));
   }
   
   //getOutputPath(VERTEX_INDEX)
