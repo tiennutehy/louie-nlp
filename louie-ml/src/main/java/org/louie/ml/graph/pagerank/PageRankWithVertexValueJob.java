@@ -49,9 +49,9 @@ public class PageRankWithVertexValueJob extends RandomWalk {
     	Vector verticesValuesVector = loadVertexValueVector(getTempPath(AdjacencyMatrixJob.VERTEX_VALUE));
     	dampingVector.plus(verticesValuesVector);
     	
-    	System.out.println("dampingVector == " + dampingVector.getQuick(1));
-    	System.out.println("verticesValuesVector == " + verticesValuesVector.getQuick(1));
-    	System.out.println("dampingVector == " + dampingVector.getQuick(1));
+    	System.out.println("dampingVector == " + dampingVector.getQuick(184));
+    	System.out.println("verticesValuesVector == " + verticesValuesVector.getQuick(184));
+    	System.out.println("dampingVector == " + dampingVector.getQuick(184));
     } catch (IOException e) {
     	System.err.println(e.getMessage());
     	e.printStackTrace();
