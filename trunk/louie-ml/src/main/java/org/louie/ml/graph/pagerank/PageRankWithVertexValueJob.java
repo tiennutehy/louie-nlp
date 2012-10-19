@@ -57,7 +57,6 @@ public class PageRankWithVertexValueJob extends RandomWalk {
   @Override
   protected void addSpecificOptions() {
     addOption("vertexValueField", null, "index of the vertex value field", true);
-    addOption("vertexValue", null, "vertex value file", true);
   }
 
   @Override
