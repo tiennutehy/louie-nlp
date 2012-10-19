@@ -83,7 +83,8 @@ public class AdjacencyMatrixJob extends AbstractJob {
 	 */
 	static final String EDGE_WEIGHT_THRESHOLD = AdjacencyMatrixJob.class.getName() + ".edgeWeightThreshold";
 	
-  private static final Pattern SEPARATOR = Pattern.compile("[\t,]");
+  //private static final Pattern SEPARATOR = Pattern.compile("[\t,]");
+	private static final Pattern SEPARATOR = Pattern.compile("[\t]");
 
   public static void main(String[] args) throws Exception {
     ToolRunner.run(new AdjacencyMatrixJob(), args);
@@ -209,7 +210,8 @@ public class AdjacencyMatrixJob extends AbstractJob {
 
     private final IntWritable row = new IntWritable();
 
-    private static final Pattern SEPARATOR = Pattern.compile("[\t,]");
+    //private static final Pattern SEPARATOR = Pattern.compile("[\t,]");
+    private static final Pattern SEPARATOR = Pattern.compile("[\t]");
     
     private boolean continuous;
     private int edgeWeightFieldIndex;
