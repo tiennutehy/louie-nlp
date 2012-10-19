@@ -1,4 +1,4 @@
-package org.louie.ml.graph.pagerank;
+package org.louie.ml.graph.common;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,6 +10,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
@@ -60,7 +61,8 @@ public class AdjacencyMatrixJob extends AbstractJob {
   public static final String NUM_VERTICES = "numVertices.bin";
   public static final String ADJACENCY_MATRIX = "adjacencyMatrix";
   public static final String VERTEX_INDEX = "vertexIndex";
-
+  public static final String VERTEX_VALUE = "vertexValue";
+  
   static final String NUM_VERTICES_PARAM = AdjacencyMatrixJob.class.getName() + ".numVertices";
   static final String VERTEX_INDEX_PARAM = AdjacencyMatrixJob.class.getName() + ".vertexIndex";
   static final String SYMMETRIC_PARAM = AdjacencyMatrixJob.class.getName() + ".symmetric";
@@ -95,6 +97,7 @@ public class AdjacencyMatrixJob extends AbstractJob {
     addOption("symmetric", null, "produce a symmetric adjacency matrix (corresponds to an undirected graph)",
         String.valueOf(false));
     addOption("continuous", null, "use a continuous version of the PageRank", String.valueOf(false));
+    addOption("vertexValueField", null, "a field index with value in vertices input file", String.valueOf(-1));
     addOption("edgeWeightField", null, "a field index with weight in edges input file", String.valueOf(-1));
     addOption("edgeWeightThreshold", null, "a edge weight threshold", String.valueOf(-1));
 
@@ -110,7 +113,9 @@ public class AdjacencyMatrixJob extends AbstractJob {
     boolean symmetric = Boolean.parseBoolean(getOption("symmetric"));
     
     log.info("Indexing vertices sequentially, this might take a while...");
+    int vertexValueFieldIndex = Integer.parseInt(getOption("vertexValueField"));
     int numVertices = indexVertices(vertices, getOutputPath(VERTEX_INDEX));
+    indexVerticesValues(vertices, getOutputPath(VERTEX_VALUE), vertexValueFieldIndex);
 
     HadoopUtil.writeInt(numVertices, getOutputPath(NUM_VERTICES), getConf());
     Preconditions.checkArgument(numVertices > 0);
@@ -149,8 +154,9 @@ public class AdjacencyMatrixJob extends AbstractJob {
           in = HadoopUtil.openStream(fileStatus.getPath(), getConf());
           for (String line : new FileLineIterable(in)) {
           	String[] tokens = SEPARATOR.split(line.toString());
+          	int id = Integer.parseInt(tokens[0]);
             //writer.append(new IntWritable(index++), new IntWritable(Integer.parseInt(line)));
-          	writer.append(new IntWritable(index++), new IntWritable(Integer.parseInt(tokens[0])));
+          	writer.append(new IntWritable(index++), new IntWritable(id));
           }
         } finally {
           Closeables.closeQuietly(in);
@@ -159,8 +165,38 @@ public class AdjacencyMatrixJob extends AbstractJob {
     } finally {
       Closeables.closeQuietly(writer);
     }
-
+    
     return index;
+  }
+  
+  private void indexVerticesValues(Path verticesPath, Path valuePath, int valueFieldIndex) throws IOException {
+  	if (valueFieldIndex < 0) {
+  		return;
+  	}
+  	
+    FileSystem fs = FileSystem.get(verticesPath.toUri(), getConf());
+    SequenceFile.Writer writer = null;
+    int index = 0;
+
+    try {
+      writer = SequenceFile.createWriter(fs, getConf(), valuePath, IntWritable.class, DoubleWritable.class);
+
+      for (FileStatus fileStatus : fs.listStatus(verticesPath)) {
+        InputStream in = null;
+        try {
+          in = HadoopUtil.openStream(fileStatus.getPath(), getConf());
+          for (String line : new FileLineIterable(in)) {
+          	String[] tokens = SEPARATOR.split(line.toString());
+          	double value = Double.parseDouble(tokens[valueFieldIndex]);
+          	writer.append(new IntWritable(index++), new DoubleWritable(value));
+          }
+        } finally {
+          Closeables.closeQuietly(in);
+        }
+      }
+    } finally {
+      Closeables.closeQuietly(writer);
+    }
   }
 
 	static class VectorizeEdgesMapper extends Mapper<LongWritable, Text, IntWritable, VectorWritable> {
