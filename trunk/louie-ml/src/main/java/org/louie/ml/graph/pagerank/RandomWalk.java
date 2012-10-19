@@ -28,6 +28,7 @@ import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 import org.apache.mahout.math.function.Functions;
 import org.apache.mahout.math.hadoop.DistributedRowMatrix;
+import org.louie.ml.graph.common.AdjacencyMatrixJob;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.Closeables;
@@ -79,13 +80,23 @@ abstract class RandomWalk extends AbstractJob {
     Path transitionMatrixPath = getTempPath("transitionMatrix");
     Path vertexIndexPath = getTempPath(AdjacencyMatrixJob.VERTEX_INDEX);
     Path numVerticesPath = getTempPath(AdjacencyMatrixJob.NUM_VERTICES);
-
+    
     /* create the adjacency matrix */
-    ToolRunner.run(getConf(), new AdjacencyMatrixJob(), new String[] { "--vertices", getOption("vertices"),
+    if (getOption("vertexValueFieldIndex") != null) {
+      ToolRunner.run(getConf(), new AdjacencyMatrixJob(), new String[] { "--vertices", getOption("vertices"),
         "--edges", getOption("edges"), "--output", getTempPath().toString(), 
         "--continuous", getOption("continuous"), 
         "--edgeWeightField", getOption("edgeWeightField"), 
-        "--edgeWeightThreshold", getOption("edgeWeightThreshold") });
+        "--edgeWeightThreshold", getOption("edgeWeightThreshold") });   	
+    }
+    else {
+	    ToolRunner.run(getConf(), new AdjacencyMatrixJob(), new String[] { "--vertices", getOption("vertices"),
+	        "--edges", getOption("edges"), "--output", getTempPath().toString(), 
+	        "--continuous", getOption("continuous"), 
+	        "--vertexValueField", getOption("vertexValueField"), 
+	        "--edgeWeightField", getOption("edgeWeightField"), 
+	        "--edgeWeightThreshold", getOption("edgeWeightThreshold") });
+    }
 
     int numVertices = HadoopUtil.readInt(numVerticesPath, getConf());
     Preconditions.checkArgument(numVertices > 0);
