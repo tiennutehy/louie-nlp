@@ -117,7 +117,7 @@ public class AdjacencyMatrixJob extends AbstractJob {
     log.info("Indexing vertices sequentially, this might take a while...");
     int vertexValueFieldIndex = Integer.parseInt(getOption("vertexValueField"));
     int numVertices = indexVertices(vertices, getOutputPath(VERTEX_INDEX));
-    persistVerticesValues(vertices, getOutputPath(VERTEX_VALUE), vertexValueFieldIndex);
+    persistVerticesValues(vertices, getOutputPath(VERTEX_VALUE), numVertices, vertexValueFieldIndex);
 
     HadoopUtil.writeInt(numVertices, getOutputPath(NUM_VERTICES), getConf());
     Preconditions.checkArgument(numVertices > 0);
@@ -171,7 +171,7 @@ public class AdjacencyMatrixJob extends AbstractJob {
     return index;
   }
   
-  private void persistVerticesValues(Path verticesPath, Path valuePath, int valueFieldIndex) throws IOException {
+  private void persistVerticesValues(Path verticesPath, Path valuePath, int numVertices, int valueFieldIndex) throws IOException {
   	if (valueFieldIndex < 0) {
   		return;
   	}
@@ -179,7 +179,7 @@ public class AdjacencyMatrixJob extends AbstractJob {
     FileSystem fs = FileSystem.get(verticesPath.toUri(), getConf());
     
     int index = 0;
-    Vector vector = new DenseVector();
+    Vector vector = new DenseVector(numVertices).assign(0.0);
     for (FileStatus fileStatus : fs.listStatus(verticesPath)) {
       InputStream in = null;
       try {
