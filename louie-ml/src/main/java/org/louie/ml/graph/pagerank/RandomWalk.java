@@ -82,7 +82,7 @@ abstract class RandomWalk extends AbstractJob {
     Path numVerticesPath = getTempPath(AdjacencyMatrixJob.NUM_VERTICES);
     
     /* create the adjacency matrix */
-    if (getOption("vertexValueFieldIndex") != null) {
+    if (getOption("vertexValueFieldIndex") == null) {
       ToolRunner.run(getConf(), new AdjacencyMatrixJob(), new String[] { "--vertices", getOption("vertices"),
         "--edges", getOption("edges"), "--output", getTempPath().toString(), 
         "--continuous", getOption("continuous"), 
