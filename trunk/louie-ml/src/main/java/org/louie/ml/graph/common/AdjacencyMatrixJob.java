@@ -198,7 +198,7 @@ public class AdjacencyMatrixJob extends AbstractJob {
     
     DataOutputStream out = null;
     try {
-      out = fs.create(verticesPath, true);
+      out = fs.create(valuePath, true);
       VectorWritable.writeVector(out, vector);
     } finally {
       Closeables.closeQuietly(out);
