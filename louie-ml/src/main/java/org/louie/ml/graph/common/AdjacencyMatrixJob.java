@@ -1,5 +1,6 @@
 package org.louie.ml.graph.common;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -10,7 +11,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
@@ -26,6 +26,7 @@ import org.apache.mahout.common.Pair;
 import org.apache.mahout.common.iterator.FileLineIterable;
 import org.apache.mahout.common.iterator.sequencefile.SequenceFileIterable;
 import org.apache.mahout.common.mapreduce.VectorSumReducer;
+import org.apache.mahout.math.DenseVector;
 import org.apache.mahout.math.SequentialAccessSparseVector;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
@@ -116,7 +117,7 @@ public class AdjacencyMatrixJob extends AbstractJob {
     log.info("Indexing vertices sequentially, this might take a while...");
     int vertexValueFieldIndex = Integer.parseInt(getOption("vertexValueField"));
     int numVertices = indexVertices(vertices, getOutputPath(VERTEX_INDEX));
-    indexVerticesValues(vertices, getOutputPath(VERTEX_VALUE), vertexValueFieldIndex);
+    persistVerticesValues(vertices, getOutputPath(VERTEX_VALUE), vertexValueFieldIndex);
 
     HadoopUtil.writeInt(numVertices, getOutputPath(NUM_VERTICES), getConf());
     Preconditions.checkArgument(numVertices > 0);
@@ -170,35 +171,37 @@ public class AdjacencyMatrixJob extends AbstractJob {
     return index;
   }
   
-  private void indexVerticesValues(Path verticesPath, Path valuePath, int valueFieldIndex) throws IOException {
+  private void persistVerticesValues(Path verticesPath, Path valuePath, int valueFieldIndex) throws IOException {
   	if (valueFieldIndex < 0) {
   		return;
   	}
   	
     FileSystem fs = FileSystem.get(verticesPath.toUri(), getConf());
-    SequenceFile.Writer writer = null;
+    
     int index = 0;
-
-    try {
-      writer = SequenceFile.createWriter(fs, getConf(), valuePath, IntWritable.class, DoubleWritable.class);
-
-      for (FileStatus fileStatus : fs.listStatus(verticesPath)) {
-        InputStream in = null;
-        try {
-          in = HadoopUtil.openStream(fileStatus.getPath(), getConf());
-          for (String line : new FileLineIterable(in)) {
-          	String[] tokens = SEPARATOR.split(line.toString());
-          	//log.info("line == " + line);
-          	//log.info("tokens[" + valueFieldIndex + "] == " + tokens[valueFieldIndex]);
-          	double value = Double.parseDouble(tokens[valueFieldIndex]);
-          	writer.append(new IntWritable(index++), new DoubleWritable(value));
-          }
-        } finally {
-          Closeables.closeQuietly(in);
+    Vector vector = new DenseVector();
+    for (FileStatus fileStatus : fs.listStatus(verticesPath)) {
+      InputStream in = null;
+      try {
+        in = HadoopUtil.openStream(fileStatus.getPath(), getConf());
+        for (String line : new FileLineIterable(in)) {
+        	String[] tokens = SEPARATOR.split(line.toString());
+        	//log.info("line == " + line);
+        	//log.info("tokens[" + valueFieldIndex + "] == " + tokens[valueFieldIndex]);
+        	double value = Double.parseDouble(tokens[valueFieldIndex]);
+        	vector.setQuick(index++, value);
         }
+      } finally {
+        Closeables.closeQuietly(in);
       }
+    }
+    
+    DataOutputStream out = null;
+    try {
+      out = fs.create(verticesPath, true);
+      VectorWritable.writeVector(out, vector);
     } finally {
-      Closeables.closeQuietly(writer);
+      Closeables.closeQuietly(out);
     }
   }
 
