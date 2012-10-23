@@ -45,7 +45,6 @@ public class PageRankWithVertexValueJob extends RandomWalk {
   @Override
   protected Vector createDampingVector(int numVertices, double stayingProbability) {
     Vector dampingVector = new DenseVector(numVertices).assign((1.0 - stayingProbability) / numVertices);
-    /*
     try {
     	Vector verticesValuesVector = loadVertexValueVector(getTempPath(AdjacencyMatrixJob.VERTEX_VALUE));
     	dampingVector = dampingVector.plus(verticesValuesVector);
@@ -53,7 +52,6 @@ public class PageRankWithVertexValueJob extends RandomWalk {
     	System.err.println(e.getMessage());
     	e.printStackTrace();
     }
-    */
     return dampingVector;
   }
   

@@ -118,17 +118,17 @@ abstract class RandomWalk extends AbstractJob {
 
     Vector ranking = new DenseVector(numVertices).assign(1.0 / numVertices);
     Vector dampingVector = createDampingVector(numVertices, stayingProbability);
-    Vector vertexValueVector = createVertexValueVector(numVertices);
+    //Vector vertexValueVector = createVertexValueVector(numVertices);
 
     /* power method: iterative transition-matrix times ranking-vector multiplication */
     while (numIterations-- > 0) {
-    	if (vertexValueVector == null) {
+    	//if (vertexValueVector == null) {
     		ranking = transitionMatrix.times(ranking).plus(dampingVector);
-    	}
-    	else {
-    		ranking = ranking.plus(vertexValueVector);
-    		ranking = transitionMatrix.times(ranking).plus(dampingVector);
-    	}
+    	//}
+    	//else {
+    	//	ranking = ranking.plus(vertexValueVector);
+    	//	ranking = transitionMatrix.times(ranking).plus(dampingVector);
+    	//}
     }
 
     persistVector(getConf(), getTempPath(RANK_VECTOR), ranking);
