@@ -42,6 +42,11 @@ public class RandomWalkWithRestartJob extends RandomWalk {
     dampingVector.set(sourceVertexIndex, 1.0 - stayingProbability);
     return dampingVector;
   }
+  
+  @Override
+  protected Vector createVertexValueVector(int numVertices) {
+  	return null;
+  }
 
   @Override
   protected void addSpecificOptions() {
