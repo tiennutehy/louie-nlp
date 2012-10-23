@@ -134,7 +134,8 @@ abstract class RandomWalk extends AbstractJob {
     	ranking = transitionMatrix.times(ranking).plus(dampingVector);
      	if (vertexValueVector != null) {
      		//ranking = ranking.plus(amplifiedVertexValueVector);
-     		ranking = ranking.times(0.3).plus(vertexValueVector.times(0.7));
+     		//ranking = ranking.times(0.3).plus(vertexValueVector.times(0.7));
+     		ranking = ranking.plus(vertexValueVector);
     	}
     }
 
