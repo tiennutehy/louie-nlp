@@ -34,4 +34,9 @@ public class PageRankJob extends RandomWalk {
   protected Vector createDampingVector(int numVertices, double stayingProbability) {
     return new DenseVector(numVertices).assign((1.0 - stayingProbability) / numVertices);
   }
+  
+  @Override
+  protected Vector createVertexValueVector(int numVertices) {
+  	return null;
+  }
 }

@@ -46,6 +46,8 @@ abstract class RandomWalk extends AbstractJob {
   static final String STAYING_PROBABILITY_PARAM = AdjacencyMatrixJob.class.getName() + ".stayingProbability";
 
   protected abstract Vector createDampingVector(int numVertices, double stayingProbability);
+  
+  protected abstract Vector createVertexValueVector(int numVertices);
 
   protected void addSpecificOptions() {}
   protected void evaluateSpecificOptions(Map<String, List<String>> parsedArgs) {}
@@ -116,10 +118,17 @@ abstract class RandomWalk extends AbstractJob {
 
     Vector ranking = new DenseVector(numVertices).assign(1.0 / numVertices);
     Vector dampingVector = createDampingVector(numVertices, stayingProbability);
+    Vector vertexValueVector = createVertexValueVector(numVertices);
 
     /* power method: iterative transition-matrix times ranking-vector multiplication */
     while (numIterations-- > 0) {
-      ranking = transitionMatrix.times(ranking).plus(dampingVector);
+    	if (vertexValueVector == null) {
+    		ranking = transitionMatrix.times(ranking).plus(dampingVector);
+    	}
+    	else {
+    		ranking = ranking.plus(vertexValueVector);
+    		ranking = transitionMatrix.times(ranking).plus(dampingVector);
+    	}
     }
 
     persistVector(getConf(), getTempPath(RANK_VECTOR), ranking);
