@@ -135,7 +135,8 @@ abstract class RandomWalk extends AbstractJob {
      			ranking = ranking.plus(amplifiedVertexValueVector);
      		}
      		else {
-     			ranking = ranking.plus(vertexValueVector);
+     			//ranking = ranking.plus(vertexValueVector);
+     			ranking = ranking.plus(amplifiedVertexValueVector);
      		}
     	}
     }
