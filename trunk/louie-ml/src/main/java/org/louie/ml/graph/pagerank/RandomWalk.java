@@ -136,7 +136,9 @@ abstract class RandomWalk extends AbstractJob {
      		double vertexNormalizer = Double.parseDouble(getOption("vertexNormalizer"));
      		double edgeNormalizer = Double.parseDouble(getOption("edgeNormalizer"));
      		//ranking = ranking.plus(amplifiedVertexValueVector);
-     		ranking = ranking.times(edgeNormalizer).plus(vertexValueVector.times(vertexNormalizer));
+     		if (numIterations > 1) {
+     			ranking = ranking.times(edgeNormalizer).plus(vertexValueVector.times(vertexNormalizer));
+     		}
     	}
     }
 
