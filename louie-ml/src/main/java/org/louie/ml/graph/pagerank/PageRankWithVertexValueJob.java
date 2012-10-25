@@ -73,8 +73,8 @@ public class PageRankWithVertexValueJob extends RandomWalk {
   @SuppressWarnings("unused")
   protected void evaluateSpecificOptions(Map<String, List<String>> parsedArgs) {
 		int vertexValueFieldIndex = Integer.parseInt(getOption("vertexValueField"));
+		double vertexNormalizer = Double.parseDouble(getOption("vertexNormalizer"));
 		double edgeNormalizer = Double.parseDouble(getOption("edgeNormalizer"));
-		double vertexNormalizer = Double.parseDouble(getOption("vertexValueNormalizer"));
   }
   
   //getOutputPath(VERTEX_INDEX)
