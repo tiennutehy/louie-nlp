@@ -37,7 +37,9 @@ import com.google.common.io.Closeables;
  * <p>Note that because of how Hadoop parses arguments, all "-D" arguments must appear before all other arguments.</p>
  */
 public class PageRankWithVertexValueJob extends RandomWalk {
-
+	
+	private double vertexValueNormalizer;
+	
   public static void main(String[] args) throws Exception {
     ToolRunner.run(new PageRankWithVertexValueJob(), args);
   }
@@ -54,7 +56,7 @@ public class PageRankWithVertexValueJob extends RandomWalk {
     Vector vertexValueVector = new DenseVector(numVertices).assign(0);
     try {
     	Vector verticesValuesVector = loadVertexValueVector(getTempPath(AdjacencyMatrixJob.VERTEX_VALUE));
-    	vertexValueVector = vertexValueVector.plus(verticesValuesVector);
+    	vertexValueVector = vertexValueVector.plus(verticesValuesVector).times(vertexValueNormalizer);
     } catch (IOException e) {
     	System.err.println(e.getMessage());
     	e.printStackTrace();
@@ -65,12 +67,14 @@ public class PageRankWithVertexValueJob extends RandomWalk {
   @Override
   protected void addSpecificOptions() {
     addOption("vertexValueField", null, "index of the vertex value field", true);
+    addOption("vertexValueNormalizer", null, "vertex value normalizer", true);
   }
 
   @Override
   @SuppressWarnings("unused")
   protected void evaluateSpecificOptions(Map<String, List<String>> parsedArgs) {
 		int vertexValueFieldIndex = Integer.parseInt(getOption("vertexValueField"));
+		vertexValueNormalizer = Double.parseDouble(getOption("vertexValueNormalizer"));
   }
   
   //getOutputPath(VERTEX_INDEX)
