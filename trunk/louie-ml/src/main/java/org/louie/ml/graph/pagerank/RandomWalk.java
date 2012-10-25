@@ -133,9 +133,10 @@ abstract class RandomWalk extends AbstractJob {
     while (numIterations-- > 0) {
     	ranking = transitionMatrix.times(ranking).plus(dampingVector);
      	if (vertexValueVector != null) {
+     		double vertexNormalizer = Double.parseDouble(getOption("vertexNormalizer"));
+     		double edgeNormalizer = Double.parseDouble(getOption("edgeNormalizer"));
      		//ranking = ranking.plus(amplifiedVertexValueVector);
-     		//ranking = ranking.times(0.5).plus(vertexValueVector.times(0.5));
-     		ranking = ranking.plus(vertexValueVector);
+     		ranking = ranking.times(edgeNormalizer).plus(vertexValueVector.times(vertexNormalizer));
     	}
     }
 
