@@ -122,9 +122,26 @@ abstract class RandomWalk extends AbstractJob {
     
     Vector amplifiedVertexValueVector = vertexValueVector.clone();
     for (int i = 0; i < amplifiedVertexValueVector.size(); i++) {
-    	if (amplifiedVertexValueVector.get(i) > 0.0) {
-    		amplifiedVertexValueVector.setQuick(i, ((vertexValueVector.get(i) * 10) / numVertices));
-    	}
+    	//if (amplifiedVertexValueVector.get(i) > 0.0) {
+    		double value = amplifiedVertexValueVector.get(i);
+    		double normalizedValue = 1.0;
+    		if (value >= 0.5) {
+    			normalizedValue = 5.0;
+    		}
+    		else if (value >= 0.1 && value < 0.5) {
+    			normalizedValue = 3.0;
+    		}
+    		else if (value >= 0.01 && value < 0.1) {
+    			normalizedValue = 2.0;
+    		}
+    		else if (value > 0 && value < 0.01){
+    			normalizedValue = 1.0;
+    		}
+    		else {
+    			normalizedValue = 0.5;
+    		}
+    		amplifiedVertexValueVector.setQuick(i, ((normalizedValue) / numVertices));
+    	//}
     }
     
     if (vertexValueVector != null) {
