@@ -57,14 +57,17 @@ public class PageRankWithVertexValueJob extends RandomWalk {
     Vector vertexValueVector = new DenseVector(numVertices).assign(0);
     try {
     	Vector verticesValuesVector = loadVertexValueVector(getTempPath(AdjacencyMatrixJob.VERTEX_VALUE));
-    	if (!continuousVertexValue) {
+    	
+    	if (continuousVertexValue) {
+    		vertexValueVector = vertexValueVector.plus(verticesValuesVector.times(vertexValueNormalizer / numVertices));
+    	}
+    	else {
 	    	for (int i = 0; i < verticesValuesVector.size(); i++) {
 	      	if (verticesValuesVector.get(i) > 0.0) {
-	      		verticesValuesVector.setQuick(i, 1.0);
+	      		verticesValuesVector.setQuick(i, (vertexValueNormalizer * 1.0) / numVertices);
 	      	}
-	      }
+	      }    		
     	}
-    	vertexValueVector = vertexValueVector.plus(verticesValuesVector.times(vertexValueNormalizer / numVertices));
     	
     } catch (IOException e) {
     	System.err.println(e.getMessage());
