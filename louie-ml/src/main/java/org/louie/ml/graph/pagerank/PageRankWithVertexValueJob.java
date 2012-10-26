@@ -38,7 +38,7 @@ import com.google.common.io.Closeables;
  */
 public class PageRankWithVertexValueJob extends RandomWalk {
 	
-	private boolean continousVertexValue;
+	private boolean continuousVertexValue;
 	private double vertexValueNormalizer;
 	
   public static void main(String[] args) throws Exception {
@@ -57,7 +57,7 @@ public class PageRankWithVertexValueJob extends RandomWalk {
     Vector vertexValueVector = new DenseVector(numVertices).assign(0);
     try {
     	Vector verticesValuesVector = loadVertexValueVector(getTempPath(AdjacencyMatrixJob.VERTEX_VALUE));
-    	if (!continousVertexValue) {
+    	if (!continuousVertexValue) {
 	    	for (int i = 0; i < verticesValuesVector.size(); i++) {
 	      	if (verticesValuesVector.get(i) > 0.0) {
 	      		verticesValuesVector.setQuick(i, 1.0);
@@ -76,7 +76,7 @@ public class PageRankWithVertexValueJob extends RandomWalk {
   @Override
   protected void addSpecificOptions() {
     addOption("vertexValueField", null, "index of the vertex value field", true);
-    addOption("continuousVertexValue", null, "apply continous vertex value or not", true);
+    addOption("continuousVertexValue", null, "apply continuous vertex value or not", true);
     addOption("vertexValueNormalizer", null, "vertex value normalizer", String.valueOf(false));
   }
 
@@ -84,7 +84,7 @@ public class PageRankWithVertexValueJob extends RandomWalk {
   @SuppressWarnings("unused")
   protected void evaluateSpecificOptions(Map<String, List<String>> parsedArgs) {
 		int vertexValueFieldIndex = Integer.parseInt(getOption("vertexValueField"));
-		continousVertexValue = Boolean.parseBoolean(getOption("continousVertexValue"));
+		continuousVertexValue = Boolean.parseBoolean(getOption("continuousVertexValue"));
 		vertexValueNormalizer = Double.parseDouble(getOption("vertexValueNormalizer"));
   }
   
