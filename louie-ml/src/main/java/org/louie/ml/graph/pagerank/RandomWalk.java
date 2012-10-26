@@ -120,6 +120,7 @@ abstract class RandomWalk extends AbstractJob {
     Vector dampingVector = createDampingVector(numVertices, stayingProbability);
     Vector vertexValueVector = createVertexValueVector(numVertices);
     
+    /*
     Vector amplifiedVertexValueVector = vertexValueVector.clone();
     for (int i = 0; i < amplifiedVertexValueVector.size(); i++) {
     	if (amplifiedVertexValueVector.get(i) > 0.0) {
@@ -127,14 +128,10 @@ abstract class RandomWalk extends AbstractJob {
     		amplifiedVertexValueVector.setQuick(i, ((normalizedValue) / numVertices));
     	}
     }
+    */
     
     if (vertexValueVector != null) {
-   		double vertexNormalizer = Double.parseDouble(getOption("vertexNormalizer"));
-   		double edgeNormalizer = Double.parseDouble(getOption("edgeNormalizer"));
-   		if (numIterations > 1) {
-   			//ranking = ranking.times(edgeNormalizer).plus(vertexValueVector.times(vertexNormalizer));
-   			ranking = ranking.times(edgeNormalizer).plus(amplifiedVertexValueVector.times(vertexNormalizer));
-   		}
+   			ranking = ranking.plus(vertexValueVector);
   	}
     
     /* power method: iterative transition-matrix times ranking-vector multiplication */
