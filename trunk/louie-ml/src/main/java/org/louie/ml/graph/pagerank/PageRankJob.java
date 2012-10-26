@@ -36,7 +36,8 @@ public class PageRankJob extends RandomWalk {
   }
   
   @Override
-  protected Vector createVertexValueVector(int numVertices) {
-  	return null;
+  protected Vector createRankingVector(int numVertices) {
+  	Vector ranking = new DenseVector(numVertices).assign(1.0 / numVertices);
+  	return ranking;
   }
 }
