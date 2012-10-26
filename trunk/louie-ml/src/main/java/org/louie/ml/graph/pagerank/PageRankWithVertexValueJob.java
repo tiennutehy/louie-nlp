@@ -37,8 +37,7 @@ import com.google.common.io.Closeables;
  * <p>Note that because of how Hadoop parses arguments, all "-D" arguments must appear before all other arguments.</p>
  */
 public class PageRankWithVertexValueJob extends RandomWalk {
-	
-	private boolean continuousVertexValue;
+
 	private double vertexValueNormalizer;
 	
   public static void main(String[] args) throws Exception {
@@ -57,19 +56,7 @@ public class PageRankWithVertexValueJob extends RandomWalk {
     Vector vertexValueVector = new DenseVector(numVertices).assign(0);
     try {
     	Vector verticesValuesVector = loadVertexValueVector(getTempPath(AdjacencyMatrixJob.VERTEX_VALUE));
-    	
-    	if (continuousVertexValue) {
-    		vertexValueVector = vertexValueVector.plus(verticesValuesVector.times(vertexValueNormalizer / numVertices));
-    	}
-    	else {
-	    	for (int i = 0; i < verticesValuesVector.size(); i++) {
-	      	if (verticesValuesVector.get(i) > 0.0) {
-	      		//verticesValuesVector.setQuick(i, (vertexValueNormalizer * 1.0) / numVertices);
-	      		verticesValuesVector.setQuick(i, 1.0);
-	      	}
-	      }    		
-    	}
-    	
+    	vertexValueVector = vertexValueVector.plus(verticesValuesVector.times(vertexValueNormalizer / numVertices));
     } catch (IOException e) {
     	System.err.println(e.getMessage());
     	e.printStackTrace();
@@ -80,7 +67,6 @@ public class PageRankWithVertexValueJob extends RandomWalk {
   @Override
   protected void addSpecificOptions() {
     addOption("vertexValueField", null, "index of the vertex value field", true);
-    addOption("continuousVertexValue", null, "apply continuous vertex value or not", true);
     addOption("vertexValueNormalizer", null, "vertex value normalizer", String.valueOf(false));
   }
 
@@ -88,7 +74,6 @@ public class PageRankWithVertexValueJob extends RandomWalk {
   @SuppressWarnings("unused")
   protected void evaluateSpecificOptions(Map<String, List<String>> parsedArgs) {
 		int vertexValueFieldIndex = Integer.parseInt(getOption("vertexValueField"));
-		continuousVertexValue = Boolean.parseBoolean(getOption("continuousVertexValue"));
 		vertexValueNormalizer = Double.parseDouble(getOption("vertexValueNormalizer"));
   }
   
