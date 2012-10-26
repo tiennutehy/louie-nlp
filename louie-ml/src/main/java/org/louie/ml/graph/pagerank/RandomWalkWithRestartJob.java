@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.common.AbstractJob;
+import org.apache.mahout.math.DenseVector;
 import org.apache.mahout.math.RandomAccessSparseVector;
 import org.apache.mahout.math.Vector;
 
@@ -44,8 +45,9 @@ public class RandomWalkWithRestartJob extends RandomWalk {
   }
   
   @Override
-  protected Vector createVertexValueVector(int numVertices) {
-  	return null;
+  protected Vector createRankingVector(int numVertices) {
+  	Vector ranking = new DenseVector(numVertices).assign(1.0 / numVertices);
+  	return ranking;
   }
 
   @Override

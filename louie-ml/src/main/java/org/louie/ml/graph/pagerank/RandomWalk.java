@@ -22,7 +22,6 @@ import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.HadoopUtil;
 import org.apache.mahout.common.mapreduce.MergeVectorsCombiner;
 import org.apache.mahout.common.mapreduce.MergeVectorsReducer;
-import org.apache.mahout.math.DenseVector;
 import org.apache.mahout.math.RandomAccessSparseVector;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
@@ -47,7 +46,7 @@ abstract class RandomWalk extends AbstractJob {
 
   protected abstract Vector createDampingVector(int numVertices, double stayingProbability);
   
-  protected abstract Vector createVertexValueVector(int numVertices);
+  protected abstract Vector createRankingVector(int numVertices);
 
   protected void addSpecificOptions() {}
   protected void evaluateSpecificOptions(Map<String, List<String>> parsedArgs) {}
@@ -116,35 +115,15 @@ abstract class RandomWalk extends AbstractJob {
         numVertices, numVertices);
     transitionMatrix.setConf(getConf());
 
-    Vector ranking = new DenseVector(numVertices).assign(1.0 / numVertices);
+    Vector ranking = createRankingVector(numVertices);
     Vector dampingVector = createDampingVector(numVertices, stayingProbability);
-    Vector vertexValueVector = createVertexValueVector(numVertices);
-    
-    /*
-    if (vertexValueVector != null) {
-   			ranking = ranking.plus(vertexValueVector);
-  	}
-  	*/
-
-    /*
-    if (vertexValueVector != null) {
-    	vertexValueVector = transitionMatrix.times(vertexValueVector);
-    }
-    */
-    
+ 
     /* power method: iterative transition-matrix times ranking-vector multiplication */
     while (numIterations-- > 0) {
-    	//ranking = transitionMatrix.times(ranking).plus(dampingVector);
-    	
-    	if (numIterations > 1) {
-  	     if (vertexValueVector != null) {
-  	    	 vertexValueVector = transitionMatrix.times(vertexValueVector);
-    	   }  		
-    	}
+  		ranking = transitionMatrix.times(ranking).plus(dampingVector);
     }
 
-    //persistVector(getConf(), getTempPath(RANK_VECTOR), ranking);
-    persistVector(getConf(), getTempPath(RANK_VECTOR), vertexValueVector);
+    persistVector(getConf(), getTempPath(RANK_VECTOR), ranking);
 
     Job vertexWithPageRank = prepareJob(vertexIndexPath, getOutputPath(), SequenceFileInputFormat.class,
         RankPerVertexMapper.class, LongWritable.class, DoubleWritable.class, TextOutputFormat.class);
