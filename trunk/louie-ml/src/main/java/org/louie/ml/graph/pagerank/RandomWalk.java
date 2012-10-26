@@ -123,7 +123,7 @@ abstract class RandomWalk extends AbstractJob {
     Vector amplifiedVertexValueVector = vertexValueVector.clone();
     for (int i = 0; i < amplifiedVertexValueVector.size(); i++) {
     	if (amplifiedVertexValueVector.get(i) > 0.0) {
-    		double normalizedValue = 1000 * amplifiedVertexValueVector.get(i);
+    		double normalizedValue = 10000 * amplifiedVertexValueVector.get(i);
     		amplifiedVertexValueVector.setQuick(i, ((normalizedValue) / numVertices));
     	}
     }
@@ -133,7 +133,7 @@ abstract class RandomWalk extends AbstractJob {
    		double edgeNormalizer = Double.parseDouble(getOption("edgeNormalizer"));
    		if (numIterations > 1) {
    			//ranking = ranking.times(edgeNormalizer).plus(vertexValueVector.times(vertexNormalizer));
-   			//ranking = ranking.times(edgeNormalizer).plus(amplifiedVertexValueVector.times(vertexNormalizer));
+   			ranking = ranking.times(edgeNormalizer).plus(amplifiedVertexValueVector.times(vertexNormalizer));
    		}
   	}
     
