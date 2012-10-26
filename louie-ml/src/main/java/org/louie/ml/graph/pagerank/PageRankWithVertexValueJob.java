@@ -64,7 +64,8 @@ public class PageRankWithVertexValueJob extends RandomWalk {
     	else {
 	    	for (int i = 0; i < verticesValuesVector.size(); i++) {
 	      	if (verticesValuesVector.get(i) > 0.0) {
-	      		verticesValuesVector.setQuick(i, (vertexValueNormalizer * 1.0) / numVertices);
+	      		//verticesValuesVector.setQuick(i, (vertexValueNormalizer * 1.0) / numVertices);
+	      		verticesValuesVector.setQuick(i, 1.0);
 	      	}
 	      }    		
     	}
