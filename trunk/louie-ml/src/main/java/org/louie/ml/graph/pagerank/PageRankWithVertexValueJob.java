@@ -38,7 +38,7 @@ import com.google.common.io.Closeables;
  */
 public class PageRankWithVertexValueJob extends RandomWalk {
 
-	private double vertexValueNormalizer;
+	private double defalutVertexValue;
 	
   public static void main(String[] args) throws Exception {
     ToolRunner.run(new PageRankWithVertexValueJob(), args);
@@ -55,7 +55,7 @@ public class PageRankWithVertexValueJob extends RandomWalk {
   @Override
   protected Vector createRankingVector(int numVertices) {
     //Vector ranking = new DenseVector(numVertices).assign(0.0);
-    Vector ranking = new DenseVector(numVertices).assign(0.0000001);
+    Vector ranking = new DenseVector(numVertices).assign(defalutVertexValue);
     try {
     	Vector verticesValuesVector = loadVertexValueVector(getTempPath(AdjacencyMatrixJob.VERTEX_VALUE));
     	//ranking = ranking.plus(verticesValuesVector.times(vertexValueNormalizer / numVertices));
@@ -70,17 +70,15 @@ public class PageRankWithVertexValueJob extends RandomWalk {
   @Override
   protected void addSpecificOptions() {
     addOption("vertexValueField", null, "index of the vertex value field", true);
-    addOption("vertexValueNormalizer", null, "vertex value normalizer", String.valueOf(false));
+    addOption("defalutVertexValue", null, "default vertex value", true);
   }
 
   @Override
   @SuppressWarnings("unused")
   protected void evaluateSpecificOptions(Map<String, List<String>> parsedArgs) {
 		int vertexValueFieldIndex = Integer.parseInt(getOption("vertexValueField"));
-		vertexValueNormalizer = Double.parseDouble(getOption("vertexValueNormalizer"));
+		defalutVertexValue = Double.parseDouble(getOption("defalutVertexValue"));
   }
-  
-  //getOutputPath(VERTEX_INDEX)
   
   private Vector loadVertexValueVector(Path vertexValuePath) throws IOException {
     DataInputStream in = null;
