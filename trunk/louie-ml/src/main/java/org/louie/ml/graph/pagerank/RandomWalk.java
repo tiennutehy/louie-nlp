@@ -129,17 +129,17 @@ abstract class RandomWalk extends AbstractJob {
     }
     */
     
+    if (vertexValueVector != null) {
+   		double vertexNormalizer = Double.parseDouble(getOption("vertexNormalizer"));
+   		double edgeNormalizer = Double.parseDouble(getOption("edgeNormalizer"));
+   		if (numIterations > 1) {
+   			ranking = ranking.times(edgeNormalizer).plus(vertexValueVector.times(vertexNormalizer));
+   		}
+  	}
+    
     /* power method: iterative transition-matrix times ranking-vector multiplication */
     while (numIterations-- > 0) {
     	ranking = transitionMatrix.times(ranking).plus(dampingVector);
-     	if (vertexValueVector != null) {
-     		double vertexNormalizer = Double.parseDouble(getOption("vertexNormalizer"));
-     		double edgeNormalizer = Double.parseDouble(getOption("edgeNormalizer"));
-     		//ranking = ranking.plus(amplifiedVertexValueVector);
-     		if (numIterations > 1) {
-     			ranking = ranking.times(edgeNormalizer).plus(vertexValueVector.times(vertexNormalizer));
-     		}
-    	}
     }
 
     persistVector(getConf(), getTempPath(RANK_VECTOR), ranking);
