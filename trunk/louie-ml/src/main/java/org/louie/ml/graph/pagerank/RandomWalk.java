@@ -125,20 +125,26 @@ abstract class RandomWalk extends AbstractJob {
    			ranking = ranking.plus(vertexValueVector);
   	}
   	*/
+
+    /*
+    if (vertexValueVector != null) {
+    	vertexValueVector = transitionMatrix.times(vertexValueVector);
+    }
+    */
     
     /* power method: iterative transition-matrix times ranking-vector multiplication */
     while (numIterations-- > 0) {
-    	ranking = transitionMatrix.times(ranking).plus(dampingVector);
+    	//ranking = transitionMatrix.times(ranking).plus(dampingVector);
     	
     	if (numIterations > 1) {
-    	   if (vertexValueVector != null) {
-      			Vector verticesRank = transitionMatrix.times(vertexValueVector);
-      			ranking.plus(verticesRank);
+  	     if (vertexValueVector != null) {
+  	    	 vertexValueVector = transitionMatrix.times(vertexValueVector);
     	   }  		
     	}
     }
 
-    persistVector(getConf(), getTempPath(RANK_VECTOR), ranking);
+    //persistVector(getConf(), getTempPath(RANK_VECTOR), ranking);
+    persistVector(getConf(), getTempPath(RANK_VECTOR), vertexValueVector);
 
     Job vertexWithPageRank = prepareJob(vertexIndexPath, getOutputPath(), SequenceFileInputFormat.class,
         RankPerVertexMapper.class, LongWritable.class, DoubleWritable.class, TextOutputFormat.class);
