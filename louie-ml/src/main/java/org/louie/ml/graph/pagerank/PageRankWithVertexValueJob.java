@@ -57,7 +57,8 @@ public class PageRankWithVertexValueJob extends RandomWalk {
     Vector ranking = new DenseVector(numVertices).assign(0);
     try {
     	Vector verticesValuesVector = loadVertexValueVector(getTempPath(AdjacencyMatrixJob.VERTEX_VALUE));
-    	ranking = ranking.plus(verticesValuesVector.times(vertexValueNormalizer / numVertices));
+    	//ranking = ranking.plus(verticesValuesVector.times(vertexValueNormalizer / numVertices));
+    	ranking = ranking.plus(verticesValuesVector);
     } catch (IOException e) {
     	System.err.println(e.getMessage());
     	e.printStackTrace();
