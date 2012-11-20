@@ -95,10 +95,12 @@ public class AdjacencyMatrixJob extends AbstractJob {
     Preconditions.checkArgument(numVertices > 0);
 
     log.info("Found " + numVertices + " vertices, creating adjacency matrix...");
+
     Job createAdjacencyMatrix = prepareJob(edges, getOutputPath(ADJACENCY_MATRIX), TextInputFormat.class,
         VectorizeEdgesMapper.class, IntWritable.class, VectorWritable.class, VectorSumReducer.class,
         IntWritable.class, VectorWritable.class, SequenceFileOutputFormat.class);
     createAdjacencyMatrix.setCombinerClass(VectorSumReducer.class);
+ 
     Configuration createAdjacencyMatrixConf = createAdjacencyMatrix.getConfiguration();
     createAdjacencyMatrixConf.set(NUM_VERTICES_PARAM, String.valueOf(numVertices));
     createAdjacencyMatrixConf.set(VERTEX_INDEX_PARAM, getOutputPath(VERTEX_INDEX).toString());
@@ -143,7 +145,8 @@ public class AdjacencyMatrixJob extends AbstractJob {
 
     private final IntWritable row = new IntWritable();
 
-    private static final Pattern SEPARATOR = Pattern.compile("[\t,]");
+    //private static final Pattern SEPARATOR = Pattern.compile("[\t,]");
+    private static final Pattern SEPARATOR = Pattern.compile("[\t]");
 
     @Override
     protected void setup(Context ctx) throws IOException, InterruptedException {
