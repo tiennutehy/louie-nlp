@@ -26,20 +26,24 @@ import org.apache.mahout.math.DenseVector;
 import org.apache.mahout.math.RandomAccessSparseVector;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
-import org.apache.mahout.math.function.Functions;
 import org.apache.mahout.math.hadoop.DistributedRowMatrix;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.Closeables;
 
+/**
+ * Random walk.
+ * 
+ * @author Younggue Bae
+ */
 abstract class RandomWalk extends AbstractJob {
 
   static final String RANK_VECTOR = "rankVector";
 
   static final String NUM_VERTICES_PARAM = AdjacencyMatrixJob.class.getName() + ".numVertices";
-  static final String STAYING_PROBABILITY_PARAM = AdjacencyMatrixJob.class.getName() + ".stayingProbability";
+  static final String DAMPING_FACTOR_PARAM = AdjacencyMatrixJob.class.getName() + ".dampingFactor";
 
-  protected abstract Vector createDampingVector(int numVertices, double stayingProbability);
+  protected abstract Vector createSeedVector(int numVertices);
 
   protected void addSpecificOptions() {}
   protected void evaluateSpecificOptions(Map<String, List<String>> parsedArgs) {}
@@ -50,7 +54,7 @@ abstract class RandomWalk extends AbstractJob {
     addOption("vertices", null, "a text file containing all vertices of the graph (one per line)", true);
     addOption("edges", null, "edges of the graph", true);
     addOption("numIterations", "it", "number of numIterations", String.valueOf(10));
-    addOption("stayingProbability", "tp", "probability not to teleport to a random vertex", String.valueOf(0.85));
+    addOption("dampingFactor", "df", "a damping factor, probability not to teleport to a random vertex(default=0.85)", String.valueOf(0.85));
 
     addSpecificOptions();
 
@@ -62,10 +66,10 @@ abstract class RandomWalk extends AbstractJob {
     evaluateSpecificOptions(parsedArgs);
 
     int numIterations = Integer.parseInt(getOption("numIterations"));
-    double stayingProbability = Double.parseDouble(getOption("stayingProbability"));
+    double dampingFactor = Double.parseDouble(getOption("dampingFactor"));
 
     Preconditions.checkArgument(numIterations > 0);
-    Preconditions.checkArgument(stayingProbability > 0.0 && stayingProbability <= 1.0);
+    Preconditions.checkArgument(dampingFactor > 0.0 && dampingFactor <= 1.0);
 
     Path adjacencyMatrixPath = getTempPath(AdjacencyMatrixJob.ADJACENCY_MATRIX);
     Path transitionMatrixPath = getTempPath("transitionMatrix");
@@ -84,7 +88,7 @@ abstract class RandomWalk extends AbstractJob {
         IntWritable.class, VectorWritable.class, MergeVectorsReducer.class, IntWritable.class, VectorWritable.class);
     createTransitionMatrix.setCombinerClass(MergeVectorsCombiner.class);
     createTransitionMatrix.getConfiguration().set(NUM_VERTICES_PARAM, String.valueOf(numVertices));
-    createTransitionMatrix.getConfiguration().set(STAYING_PROBABILITY_PARAM, String.valueOf(stayingProbability));
+    createTransitionMatrix.getConfiguration().set(DAMPING_FACTOR_PARAM, String.valueOf(dampingFactor));
     createTransitionMatrix.waitForCompletion(true);
 
     DistributedRowMatrix transitionMatrix = new DistributedRowMatrix(transitionMatrixPath, getTempPath(),
@@ -92,11 +96,11 @@ abstract class RandomWalk extends AbstractJob {
     transitionMatrix.setConf(getConf());
 
     Vector ranking = new DenseVector(numVertices).assign(1.0 / numVertices);
-    Vector dampingVector = createDampingVector(numVertices, stayingProbability);
+    Vector seedVector = createSeedVector(numVertices);
 
     /* power method: iterative transition-matrix times ranking-vector multiplication */
     while (numIterations-- > 0) {
-      ranking = transitionMatrix.times(ranking).plus(dampingVector);
+      ranking = transitionMatrix.times(ranking).times(dampingFactor).plus(seedVector.times(1 - dampingFactor));
     }
 
     persistVector(getConf(), getTempPath(RANK_VECTOR), ranking);
@@ -124,12 +128,10 @@ abstract class RandomWalk extends AbstractJob {
   static class TransposeMapper extends Mapper<IntWritable,VectorWritable,IntWritable,VectorWritable> {
 
     private int numVertices;
-    private double stayingProbability;
 
     @SuppressWarnings("rawtypes")
 		@Override
     protected void setup(Mapper.Context ctx) throws IOException, InterruptedException {
-      stayingProbability = Double.parseDouble(ctx.getConfiguration().get(STAYING_PROBABILITY_PARAM));
       numVertices = Integer.parseInt(ctx.getConfiguration().get(NUM_VERTICES_PARAM));
     }
 
@@ -138,10 +140,8 @@ abstract class RandomWalk extends AbstractJob {
       int rowIndex = r.get();
 
       Vector row = v.get();
-      row = row.normalize(1);
-      if (stayingProbability != 1.0) {
-        row.assign(Functions.MULT, stayingProbability);
-      }
+      /* divide by out-degree */
+      row = row.normalize(1);	
 
       Iterator<Vector.Element> it = row.iterateNonZero();
       while (it.hasNext()) {

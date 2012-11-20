@@ -17,7 +17,7 @@ import org.apache.mahout.math.Vector;
  * <li>--vertices=(path): file containing the list of vertices of the graph (one per line)</li>
  * <li>--edges=(path): directory containing edges of the graph (pair of vertex ids per line in textformat)</li>
  * <li>--numIterations=(Integer): number of numIterations, default: 10</li>
- * <li>--stayingProbability=(Double): probability not to teleport to a random vertex, default: 0.85</li>
+ * <li>--dampingFactor=(Double): probability not to teleport to a random vertex, default: 0.85</li>
  * </ol>
  *
  * <p>General command line options are documented in {@link AbstractJob}.</p>
@@ -29,9 +29,9 @@ public class PageRankJob extends RandomWalk {
   public static void main(String[] args) throws Exception {
     ToolRunner.run(new PageRankJob(), args);
   }
-
+  
   @Override
-  protected Vector createDampingVector(int numVertices, double stayingProbability) {
-    return new DenseVector(numVertices).assign((1.0 - stayingProbability) / numVertices);
+  protected Vector createSeedVector(int numVertices) {
+  	return new DenseVector(numVertices).assign(1 / numVertices);
   }
 }

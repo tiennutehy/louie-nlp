@@ -18,10 +18,9 @@ import org.apache.mahout.math.Vector;
  * <ol>
  * <li>--output=(path): output path</li>
  * <li>--vertices=(path): file containing the list of vertices of the graph (one per line)</li>
- * <li>--sourceVertexIndex=(int): index of the source vertex for the random walk (line number in vertices file)</li>
  * <li>--edges=(path): directory containing edges of the graph (pair of vertex ids per line in textformat)</li>
  * <li>--numIterations=(Integer): number of numIterations, default: 10</li>
- * <li>--stayingProbability=(Double): probability not to teleport to a random vertex, default: 0.85</li>
+ * <li>--dampingFactor=(Double): probability not to teleport to a random vertex, default: 0.85</li>
  * </ol>
  *
  * <p>General command line options are documented in {@link AbstractJob}.</p>
@@ -30,27 +29,25 @@ import org.apache.mahout.math.Vector;
  */
 public class RandomWalkWithRestartJob extends RandomWalk {
 
-  private int sourceVertexIndex;
-
   public static void main(String[] args) throws Exception {
     ToolRunner.run(new RandomWalkWithRestartJob(), args);
   }
 
   @Override
-  protected Vector createDampingVector(int numVertices, double stayingProbability) {
-    Vector dampingVector = new RandomAccessSparseVector(numVertices, 1);
-    dampingVector.set(sourceVertexIndex, 1.0 - stayingProbability);
+  protected Vector createSeedVector(int numVertices) {
+  	Vector dampingVector = new RandomAccessSparseVector(numVertices, 1);
+    //dampingVector.set(sourceVertexIndex, 1.0);
     return dampingVector;
   }
 
   @Override
   protected void addSpecificOptions() {
-    addOption("sourceVertexIndex", null, "index of source vertex", true);
+  	//addOption("sourceVertexIndex", null, "index of source vertex", true);
   }
 
   @Override
   protected void evaluateSpecificOptions(Map<String, List<String>> parsedArgs) {
-    sourceVertexIndex = Integer.parseInt(getOption("sourceVertexIndex"));
+    //sourceVertexIndex = Integer.parseInt(getOption("sourceVertexIndex"));
   }
 
 }
