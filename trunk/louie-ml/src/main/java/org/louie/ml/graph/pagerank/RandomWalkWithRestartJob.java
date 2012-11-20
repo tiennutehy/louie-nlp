@@ -15,13 +15,15 @@
  * limitations under the License.
  */
 
-package org.apache.mahout.graph.linkanalysis;
+package org.louie.ml.graph.pagerank;
+
+import java.util.List;
+import java.util.Map;
 
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.math.RandomAccessSparseVector;
 import org.apache.mahout.math.Vector;
-import java.util.Map;
 
 /**
  * <p>Distributed computation of the proximities of vertices to a source vertex in a directed graph</p>
@@ -64,8 +66,8 @@ public class RandomWalkWithRestartJob extends RandomWalk {
   }
 
   @Override
-  protected void evaluateSpecificOptions(Map<String, String> parsedArgs) {
-    sourceVertexIndex = Integer.parseInt(parsedArgs.get("--sourceVertexIndex"));
+  protected void evaluateSpecificOptions(Map<String, List<String>> parsedArgs) {
+    sourceVertexIndex = Integer.parseInt(getOption("sourceVertexIndex"));
   }
 
 }
