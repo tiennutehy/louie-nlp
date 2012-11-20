@@ -1,13 +1,27 @@
-package org.louie.ml.graph.pagerank;
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import java.util.List;
-import java.util.Map;
+package org.apache.mahout.graph.linkanalysis;
 
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.common.AbstractJob;
-import org.apache.mahout.math.DenseVector;
 import org.apache.mahout.math.RandomAccessSparseVector;
 import org.apache.mahout.math.Vector;
+import java.util.Map;
 
 /**
  * <p>Distributed computation of the proximities of vertices to a source vertex in a directed graph</p>
@@ -43,12 +57,6 @@ public class RandomWalkWithRestartJob extends RandomWalk {
     dampingVector.set(sourceVertexIndex, 1.0 - stayingProbability);
     return dampingVector;
   }
-  
-  @Override
-  protected Vector createRankingVector(int numVertices) {
-  	Vector ranking = new DenseVector(numVertices).assign(1.0 / numVertices);
-  	return ranking;
-  }
 
   @Override
   protected void addSpecificOptions() {
@@ -56,8 +64,8 @@ public class RandomWalkWithRestartJob extends RandomWalk {
   }
 
   @Override
-  protected void evaluateSpecificOptions(Map<String, List<String>> parsedArgs) {
-    sourceVertexIndex = Integer.parseInt(getOption("sourceVertexIndex"));
+  protected void evaluateSpecificOptions(Map<String, String> parsedArgs) {
+    sourceVertexIndex = Integer.parseInt(parsedArgs.get("--sourceVertexIndex"));
   }
 
 }
