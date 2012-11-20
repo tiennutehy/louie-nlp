@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.mahout.graph.linkanalysis;
+package org.louie.ml.graph.pagerank;
 
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.common.AbstractJob;

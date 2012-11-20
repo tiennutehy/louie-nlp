@@ -15,10 +15,15 @@
  * limitations under the License.
  */
 
-package org.apache.mahout.graph.linkanalysis;
+package org.louie.ml.graph.pagerank;
 
-import com.google.common.base.Preconditions;
-import com.google.common.io.Closeables;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -34,7 +39,6 @@ import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.HadoopUtil;
 import org.apache.mahout.common.mapreduce.MergeVectorsCombiner;
 import org.apache.mahout.common.mapreduce.MergeVectorsReducer;
-import org.apache.mahout.graph.AdjacencyMatrixJob;
 import org.apache.mahout.math.DenseVector;
 import org.apache.mahout.math.RandomAccessSparseVector;
 import org.apache.mahout.math.Vector;
@@ -42,11 +46,8 @@ import org.apache.mahout.math.VectorWritable;
 import org.apache.mahout.math.function.Functions;
 import org.apache.mahout.math.hadoop.DistributedRowMatrix;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.Map;
+import com.google.common.base.Preconditions;
+import com.google.common.io.Closeables;
 
 abstract class RandomWalk extends AbstractJob {
 
@@ -58,7 +59,7 @@ abstract class RandomWalk extends AbstractJob {
   protected abstract Vector createDampingVector(int numVertices, double stayingProbability);
 
   protected void addSpecificOptions() {}
-  protected void evaluateSpecificOptions(Map<String, String> parsedArgs) {}
+  protected void evaluateSpecificOptions(Map<String, List<String>> parsedArgs) {}
 
   @Override
   public final int run(String[] args) throws Exception {
@@ -70,15 +71,15 @@ abstract class RandomWalk extends AbstractJob {
 
     addSpecificOptions();
 
-    Map<String, String> parsedArgs = parseArguments(args);
+    Map<String, List<String>> parsedArgs = parseArguments(args);
     if (parsedArgs == null) {
       return -1;
     }
 
     evaluateSpecificOptions(parsedArgs);
 
-    int numIterations = Integer.parseInt(parsedArgs.get("--numIterations"));
-    double stayingProbability = Double.parseDouble(parsedArgs.get("--stayingProbability"));
+    int numIterations = Integer.parseInt(getOption("numIterations"));
+    double stayingProbability = Double.parseDouble(getOption("stayingProbability"));
 
     Preconditions.checkArgument(numIterations > 0);
     Preconditions.checkArgument(stayingProbability > 0.0 && stayingProbability <= 1.0);
@@ -89,8 +90,8 @@ abstract class RandomWalk extends AbstractJob {
     Path numVerticesPath = getTempPath(AdjacencyMatrixJob.NUM_VERTICES);
 
     /* create the adjacency matrix */
-    ToolRunner.run(getConf(), new AdjacencyMatrixJob(), new String[] { "--vertices", parsedArgs.get("--vertices"),
-        "--edges", parsedArgs.get("--edges"), "--output", getTempPath().toString() });
+    ToolRunner.run(getConf(), new AdjacencyMatrixJob(), new String[] { "--vertices", getOption("vertices"),
+        "--edges", getOption("edges"), "--output", getTempPath().toString() });
 
     int numVertices = HadoopUtil.readInt(numVerticesPath, getConf());
     Preconditions.checkArgument(numVertices > 0);
@@ -142,7 +143,8 @@ abstract class RandomWalk extends AbstractJob {
     private int numVertices;
     private double stayingProbability;
 
-    @Override
+    @SuppressWarnings("rawtypes")
+		@Override
     protected void setup(Mapper.Context ctx) throws IOException, InterruptedException {
       stayingProbability = Double.parseDouble(ctx.getConfiguration().get(STAYING_PROBABILITY_PARAM));
       numVertices = Integer.parseInt(ctx.getConfiguration().get(NUM_VERTICES_PARAM));
@@ -188,7 +190,8 @@ abstract class RandomWalk extends AbstractJob {
       }
     }
 
-    @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+		@Override
     protected void map(IntWritable index, IntWritable vertex, Mapper.Context ctx)
         throws IOException, InterruptedException {
       ctx.write(vertex, new DoubleWritable(ranks.get(index.get())));
