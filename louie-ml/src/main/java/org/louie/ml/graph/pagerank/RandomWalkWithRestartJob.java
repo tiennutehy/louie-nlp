@@ -1,12 +1,22 @@
 package org.louie.ml.graph.pagerank;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.common.AbstractJob;
-import org.apache.mahout.math.RandomAccessSparseVector;
+import org.apache.mahout.common.HadoopUtil;
+import org.apache.mahout.common.iterator.FileLineIterable;
+import org.apache.mahout.math.DenseVector;
 import org.apache.mahout.math.Vector;
+
+import com.google.common.io.Closeables;
 
 /**
  * <p>Distributed computation of the proximities of vertices to a source vertex in a directed graph</p>
@@ -29,25 +39,58 @@ import org.apache.mahout.math.Vector;
  */
 public class RandomWalkWithRestartJob extends RandomWalk {
 
+	private static final Pattern SEPARATOR = Pattern.compile("[\t]");
+	private Path verticesPath;
+	private int vertexValueIndex;
+	
   public static void main(String[] args) throws Exception {
     ToolRunner.run(new RandomWalkWithRestartJob(), args);
+  }
+  
+  private Vector loadRestartVector(Path verticesPath, int numVertices, int valueIndex) throws IOException {
+    FileSystem fs = FileSystem.get(verticesPath.toUri(), getConf());    
+    int index = 0;
+    Vector restartVector = new DenseVector(numVertices);
+    
+    for (FileStatus fileStatus : fs.listStatus(verticesPath)) {
+      InputStream in = null;
+      try {
+        in = HadoopUtil.openStream(fileStatus.getPath(), getConf());
+        for (String line : new FileLineIterable(in)) {
+        	String[] tokens = SEPARATOR.split(line.toString());
+        	double value = Double.parseDouble(tokens[valueIndex]);
+        	restartVector.setQuick(index++, value);
+        }
+      } finally {
+        Closeables.closeQuietly(in);
+      }
+    }
+    
+    return restartVector;
   }
 
   @Override
   protected Vector createSeedVector(int numVertices) {
-  	Vector dampingVector = new RandomAccessSparseVector(numVertices, 1);
-    //dampingVector.set(sourceVertexIndex, 1.0);
-    return dampingVector;
+  	try {
+  		Vector seedVector = loadRestartVector(verticesPath, numVertices, vertexValueIndex);
+  		return seedVector;
+  	} catch (IOException e) {
+  		System.err.println(e.getMessage());
+  		e.printStackTrace();
+  	}
+  	
+  	return null;
   }
 
   @Override
   protected void addSpecificOptions() {
-  	//addOption("sourceVertexIndex", null, "index of source vertex", true);
+  	addOption("vertexValueIndex", null, "index of value field in the vertices source file", true);
   }
 
   @Override
   protected void evaluateSpecificOptions(Map<String, List<String>> parsedArgs) {
-    //sourceVertexIndex = Integer.parseInt(getOption("sourceVertexIndex"));
+    vertexValueIndex = Integer.parseInt(getOption("vertexValueIndex"));
+    verticesPath = new Path(getOption("vertices"));
   }
 
 }

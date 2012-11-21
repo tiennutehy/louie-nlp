@@ -20,6 +20,8 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.HadoopUtil;
+import org.apache.mahout.common.Pair;
+import org.apache.mahout.common.iterator.sequencefile.SequenceFileIterable;
 import org.apache.mahout.common.mapreduce.MergeVectorsCombiner;
 import org.apache.mahout.common.mapreduce.MergeVectorsReducer;
 import org.apache.mahout.math.DenseVector;
@@ -75,10 +77,15 @@ abstract class RandomWalk extends AbstractJob {
     Path transitionMatrixPath = getTempPath("transitionMatrix");
     Path vertexIndexPath = getTempPath(AdjacencyMatrixJob.VERTEX_INDEX);
     Path numVerticesPath = getTempPath(AdjacencyMatrixJob.NUM_VERTICES);
+    Path danglingVertexPath = getTempPath(DanglingVertexJob.DANGLING_VERTEX);
 
     /* create the adjacency matrix */
     ToolRunner.run(getConf(), new AdjacencyMatrixJob(), new String[] { "--vertices", getOption("vertices"),
         "--edges", getOption("edges"), "--output", getTempPath().toString() });
+    
+    /* create the dangling vertices */
+    ToolRunner.run(getConf(), new DanglingVertexJob(), new String[] { "--vertexIndexPath", vertexIndexPath.toString(),
+      "--edges", getOption("edges"), "--output", getTempPath().toString() });
 
     int numVertices = HadoopUtil.readInt(numVerticesPath, getConf());
     Preconditions.checkArgument(numVertices > 0);
@@ -97,10 +104,14 @@ abstract class RandomWalk extends AbstractJob {
 
     Vector ranking = new DenseVector(numVertices).assign(1.0 / numVertices);
     Vector seedVector = createSeedVector(numVertices);
+    Vector danglingVector = createDanglingVector(danglingVertexPath, numVertices);
 
     /* power method: iterative transition-matrix times ranking-vector multiplication */
     while (numIterations-- > 0) {
-      ranking = transitionMatrix.times(ranking).times(dampingFactor).plus(seedVector.times(1 - dampingFactor));
+      ranking = transitionMatrix.times(ranking)
+      		.plus(seedVector.times(danglingVector).times(ranking))
+      		.times(dampingFactor)
+      		.plus(seedVector.times(1 - dampingFactor));
     }
 
     persistVector(getConf(), getTempPath(RANK_VECTOR), ranking);
@@ -112,6 +123,19 @@ abstract class RandomWalk extends AbstractJob {
     vertexWithPageRank.waitForCompletion(true);
 
     return 1;
+  }
+  
+  protected Vector createDanglingVector(Path danglingVertexPath, int numVertices) {
+  	DenseVector danglingVector = new DenseVector(numVertices);
+  	
+    for (Pair<IntWritable,IntWritable> indexAndDangling :
+        new SequenceFileIterable<IntWritable, IntWritable>(danglingVertexPath, true, getConf())) {
+    	int vertexIndex = indexAndDangling.getFirst().get();
+    	int dangling = indexAndDangling.getSecond().get();
+    	danglingVector.setQuick(vertexIndex, dangling);
+    }
+    
+    return danglingVector;
   }
 
   static void persistVector(Configuration conf, Path path, Vector vector) throws IOException {

@@ -25,12 +25,13 @@ echo "MapReduce job for PageRank......"
 hadoop fs -rmr /user/louie/fishisland1/output/pagerank >& /dev/null || true
 hadoop fs -rmr /user/louie/fishisland1/output/temp >& /dev/null || true
 
-hadoop jar ./target/louie-ml-0.0.1-SNAPSHOT.jar org.louie.ml.graph.pagerank.PageRankJob \
+hadoop jar ./target/louie-ml-0.1.0.jar org.louie.ml.graph.pagerank.RandomWalkWithRestartJob \
 -libjars /home1/louie09/tc/louie-ml/hadoop-lib/mahout-core-0.8-SNAPSHOT-job.jar \
 -Dmapred.child.java.opts="-Xmx1024m" \
 --vertices "/user/louie/fishisland1/output/graph/vertices.txt" \
 --edges "/user/louie/fishisland1/output/graph/edges.txt" \
 --output "/user/louie/fishisland1/output/pagerank" \
+--tempDir "/user/louie/fishisland1/output/temp" \
 --numIterations "3" \
---stayingProbability "0.8" \
---tempDir "/user/louie/fishisland1/output/temp";
+--dampingFactor "0.85" \
+--vertexValueIndex "1";
