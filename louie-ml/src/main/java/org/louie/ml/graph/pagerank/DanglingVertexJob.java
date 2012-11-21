@@ -37,7 +37,6 @@ import com.google.common.io.Closeables;
  */
 public class DanglingVertexJob extends AbstractJob {
 
-  @SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(AdjacencyMatrixJob.class);
 
   public static final String DANGLING_VERTEX = "danglingVertex";
@@ -63,6 +62,8 @@ public class DanglingVertexJob extends AbstractJob {
 
     Path verticesIndexPath = new Path(getOption("vertexIndexPath"));
     Path edgesPath = new Path(getOption("edges"));
+    
+    log.info("Creating dangling vertices...");
     
     OpenIntIntHashMap vertexIDsToIndex = this.loadVerticesIndex(verticesIndexPath);
     this.persistDanglingVertices(vertexIDsToIndex, edgesPath, getOutputPath(DANGLING_VERTEX));
@@ -95,7 +96,8 @@ public class DanglingVertexJob extends AbstractJob {
           for (String line : new FileLineIterable(in)) {
           	String[] tokens = SEPARATOR.split(line.toString());
           	int fromIndex = vertexIDsToIndex.get(Integer.parseInt(tokens[0]));
-            //int toIndex = vertexIDsToIndex.get(Integer.parseInt(tokens[1]));
+            @SuppressWarnings("unused")
+						int toIndex = vertexIDsToIndex.get(Integer.parseInt(tokens[1]));
             
             vertexIndexToDangling.put(fromIndex, 1);
           }
