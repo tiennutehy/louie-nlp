@@ -29,6 +29,8 @@ import org.apache.mahout.math.RandomAccessSparseVector;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 import org.apache.mahout.math.hadoop.DistributedRowMatrix;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.Closeables;
@@ -39,7 +41,9 @@ import com.google.common.io.Closeables;
  * @author Younggue Bae
  */
 abstract class RandomWalk extends AbstractJob {
-
+	
+	private static final Logger log = LoggerFactory.getLogger(RandomWalk.class);
+	
   static final String RANK_VECTOR = "rankVector";
 
   static final String NUM_VERTICES_PARAM = AdjacencyMatrixJob.class.getName() + ".numVertices";
@@ -112,6 +116,7 @@ abstract class RandomWalk extends AbstractJob {
 
     /* power method: iterative transition-matrix times ranking-vector multiplication */
     while (numIterations-- > 0) {
+    	log.debug("Iteration == " + numIterations);
       ranking = transitionMatrix.times(ranking);
       ranking = ranking.plus(seedVector.times(danglingVector).times(ranking));
       ranking = ranking.times(dampingFactor);
