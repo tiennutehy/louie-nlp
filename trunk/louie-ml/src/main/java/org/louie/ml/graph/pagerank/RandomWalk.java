@@ -112,10 +112,10 @@ abstract class RandomWalk extends AbstractJob {
 
     /* power method: iterative transition-matrix times ranking-vector multiplication */
     while (numIterations-- > 0) {
-      ranking = transitionMatrix.times(ranking)
-      		.plus(seedVector.times(danglingVector).times(ranking))
-      		.times(dampingFactor)
-      		.plus(seedVector.times(1 - dampingFactor));
+      ranking = transitionMatrix.times(ranking);
+      ranking = ranking.plus(seedVector.times(danglingVector).times(ranking));
+      ranking = ranking.times(dampingFactor);
+      ranking = ranking.plus(seedVector.times(1 - dampingFactor));
     }
 
     persistVector(getConf(), getTempPath(RANK_VECTOR), ranking);
