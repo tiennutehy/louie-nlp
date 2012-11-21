@@ -93,6 +93,10 @@ abstract class RandomWalk extends AbstractJob {
     /* transpose and stochastify the adjacency matrix to create the transition matrix */
     Job createTransitionMatrix = prepareJob(adjacencyMatrixPath, transitionMatrixPath, TransposeMapper.class,
         IntWritable.class, VectorWritable.class, MergeVectorsReducer.class, IntWritable.class, VectorWritable.class);
+    
+    /* This code should be included for ClassNotFoundException! */
+    createTransitionMatrix.setJarByClass(RandomWalk.class);
+    
     createTransitionMatrix.setCombinerClass(MergeVectorsCombiner.class);
     createTransitionMatrix.getConfiguration().set(NUM_VERTICES_PARAM, String.valueOf(numVertices));
     createTransitionMatrix.getConfiguration().set(DAMPING_FACTOR_PARAM, String.valueOf(dampingFactor));
