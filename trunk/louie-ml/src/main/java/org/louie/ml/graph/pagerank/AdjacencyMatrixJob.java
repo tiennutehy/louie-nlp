@@ -64,6 +64,8 @@ public class AdjacencyMatrixJob extends AbstractJob {
   static final String NUM_VERTICES_PARAM = AdjacencyMatrixJob.class.getName() + ".numVertices";
   static final String VERTEX_INDEX_PARAM = AdjacencyMatrixJob.class.getName() + ".vertexIndex";
   static final String SYMMETRIC_PARAM = AdjacencyMatrixJob.class.getName() + ".symmetric";
+  
+  private static final Pattern SEPARATOR = Pattern.compile("[\t]");
 
   public static void main(String[] args) throws Exception {
     ToolRunner.run(new AdjacencyMatrixJob(), args);
@@ -124,7 +126,8 @@ public class AdjacencyMatrixJob extends AbstractJob {
         try {
           in = HadoopUtil.openStream(fileStatus.getPath(), getConf());
           for (String line : new FileLineIterable(in)) {
-            writer.append(new IntWritable(index++), new IntWritable(Integer.parseInt(line)));
+          	String[] tokens = SEPARATOR.split(line.toString());
+            writer.append(new IntWritable(index++), new IntWritable(Integer.parseInt(tokens[0])));
           }
         } finally {
           Closeables.closeQuietly(in);
