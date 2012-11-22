@@ -67,6 +67,8 @@ public class DanglingVertexJob extends AbstractJob {
     
     OpenIntIntHashMap vertexIDsToIndex = this.loadVerticesIndex(verticesIndexPath);
     this.persistDanglingVertices(vertexIDsToIndex, edgesPath, getOutputPath(DANGLING_VECTOR));
+    
+    log.info("Created dangling vertices.");
 
     return 0;
   }
