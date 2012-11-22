@@ -37,7 +37,7 @@ import com.google.common.io.Closeables;
  */
 public class DanglingVertexJob extends AbstractJob {
 
-	private static final Logger log = LoggerFactory.getLogger(AdjacencyMatrixJob.class);
+	private static final Logger log = LoggerFactory.getLogger(DanglingVertexJob.class);
 
   public static final String DANGLING_VECTOR = "danglingVector";
   
