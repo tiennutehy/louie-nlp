@@ -106,9 +106,11 @@ abstract class RandomWalk extends AbstractJob {
     int numVertices = HadoopUtil.readInt(numVerticesPath, getConf());
     Preconditions.checkArgument(numVertices > 0);
     
+    log.info("Persist seed vector..........");
     /* persist seed vector. */
     persistSeedVector(numVertices);
 
+    log.info("Creating transition matrix..........");
     /* transpose and stochastify the adjacency matrix to create the transition matrix */
     Job createTransitionMatrix = prepareJob(adjacencyMatrixPath, transitionMatrixPath, TransposeMapper.class,
         IntWritable.class, VectorWritable.class, MergeVectorsReducer.class, IntWritable.class, VectorWritable.class);    
@@ -118,7 +120,9 @@ abstract class RandomWalk extends AbstractJob {
     createTransitionMatrix.getConfiguration().set(NUM_VERTICES_PARAM, String.valueOf(numVertices));
     createTransitionMatrix.getConfiguration().set(DAMPING_FACTOR_PARAM, String.valueOf(dampingFactor));
     createTransitionMatrix.waitForCompletion(true);
+    log.info("Created transition matrix.");
     
+    log.info("Plus seed matrix to the transition matrix..........");
     /* plus seed-dangling matrix to the transition matrix */
     Job createTransitionPlusSeedMatrix = prepareJob(transitionMatrixPath, transitionPlusSeedMatrixPath, PlusSeedMatrixMapper.class,
         IntWritable.class, VectorWritable.class, MergeVectorsReducer.class, IntWritable.class, VectorWritable.class);    
@@ -129,6 +133,7 @@ abstract class RandomWalk extends AbstractJob {
     createTransitionPlusSeedMatrix.getConfiguration().set(SEED_VECTOR_PARAM, seedVectorPath.toString());
     createTransitionPlusSeedMatrix.getConfiguration().set(DANGLING_VECTOR_PARAM, danglingVectorPath.toString());
     createTransitionPlusSeedMatrix.waitForCompletion(true);
+    log.info("Created transition matrix plus with seed matrix.");
 
     DistributedRowMatrix transitionMatrix = new DistributedRowMatrix(transitionPlusSeedMatrixPath, getTempPath(),
         numVertices, numVertices);
@@ -158,13 +163,16 @@ abstract class RandomWalk extends AbstractJob {
       iteration++;
     }
 
+    log.info("Persist rank vector..........");
     persistVector(getConf(), getTempPath(RANK_VECTOR), ranking);
 
+    log.info("Creating the vertices with PageRank.....");
     Job vertexWithPageRank = prepareJob(vertexIndexPath, getOutputPath(), SequenceFileInputFormat.class,
         RankPerVertexMapper.class, LongWritable.class, DoubleWritable.class, TextOutputFormat.class);
     vertexWithPageRank.getConfiguration().set(RankPerVertexMapper.RANK_PATH_PARAM,
         getTempPath(RANK_VECTOR).toString());
     vertexWithPageRank.waitForCompletion(true);
+    log.info("Created the vertices with PageRank.");
 
     return 1;
   }
