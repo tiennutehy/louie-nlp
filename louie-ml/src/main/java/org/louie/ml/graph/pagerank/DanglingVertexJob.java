@@ -39,7 +39,7 @@ public class DanglingVertexJob extends AbstractJob {
 
 	private static final Logger log = LoggerFactory.getLogger(AdjacencyMatrixJob.class);
 
-  public static final String DANGLING_VERTEX = "danglingVertex";
+  public static final String DANGLING_VECTOR = "danglingVector";
   
   private static final Pattern SEPARATOR = Pattern.compile("[\t]");
 
@@ -66,7 +66,7 @@ public class DanglingVertexJob extends AbstractJob {
     log.info("Creating dangling vertices...");
     
     OpenIntIntHashMap vertexIDsToIndex = this.loadVerticesIndex(verticesIndexPath);
-    this.persistDanglingVertices(vertexIDsToIndex, edgesPath, getOutputPath(DANGLING_VERTEX));
+    this.persistDanglingVertices(vertexIDsToIndex, edgesPath, getOutputPath(DANGLING_VECTOR));
 
     return 0;
   }

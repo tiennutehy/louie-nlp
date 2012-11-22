@@ -1,9 +1,16 @@
 package org.louie.ml.graph.pagerank;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.math.DenseVector;
 import org.apache.mahout.math.Vector;
+import org.apache.mahout.math.VectorWritable;
+
+import com.google.common.io.Closeables;
 
 /**
  * <p>Distributed computation of the PageRank a directed graph</p>
@@ -30,8 +37,23 @@ public class PageRankJob extends RandomWalk {
     ToolRunner.run(new PageRankJob(), args);
   }
   
+	@Override
+	protected void persistSeedVector(int numVertices) throws IOException {
+		Vector seedVector = new DenseVector(numVertices).assign(1 / numVertices);
+		
+		DataOutputStream out = null;
+		try {
+			FileSystem fs = FileSystem.get(getConf());
+			out = fs.create(getTempPath(SEED_VECTOR), true);
+			VectorWritable.writeVector(out, seedVector);
+		} finally {
+			Closeables.closeQuietly(out);
+		}
+	}
+  
   @Override
-  protected Vector createSeedVector(int numVertices) {
+  protected Vector getSeedVector(int numVertices) throws IOException {
   	return new DenseVector(numVertices).assign(1 / numVertices);
   }
+
 }
