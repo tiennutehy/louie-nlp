@@ -63,8 +63,7 @@ public class RandomWalkWithRestartJob extends RandomWalk {
         for (String line : new FileLineIterable(in)) {
         	String[] tokens = SEPARATOR.split(line.toString());
         	double value = Double.parseDouble(tokens[vertexValueIndex]);
-        	seedVector.setQuick(index, value);
-        	index++;
+        	seedVector.setQuick(index++, value);
         }
       } finally {
         Closeables.closeQuietly(in);
