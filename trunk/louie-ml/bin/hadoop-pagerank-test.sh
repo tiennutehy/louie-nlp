@@ -32,6 +32,6 @@ hadoop jar ./target/louie-ml-0.1.0.jar org.louie.ml.graph.pagerank.RandomWalkWit
 --edges "/user/louie/fishisland1/output/graph/edges.txt" \
 --output "/user/louie/fishisland1/output/pagerank" \
 --tempDir "/user/louie/fishisland1/output/temp" \
---numIterations "3" \
+--numIterations "10" \
 --dampingFactor "0.85" \
 --vertexValueIndex "1";

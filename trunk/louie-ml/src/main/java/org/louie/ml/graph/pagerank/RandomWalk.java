@@ -68,6 +68,7 @@ abstract class RandomWalk extends AbstractJob {
     addOption("edges", null, "edges of the graph", true);
     addOption("numIterations", "it", "number of numIterations", String.valueOf(10));
     addOption("dampingFactor", "df", "a damping factor, probability not to teleport to a random vertex(default=0.85)", String.valueOf(0.85));
+    addOption("tolerance", "t", "power iteration will stop when the difference between iterations is less than this. (epsilon)", String.valueOf(0.002));
 
     addSpecificOptions();
 
@@ -80,9 +81,11 @@ abstract class RandomWalk extends AbstractJob {
 
     int numIterations = Integer.parseInt(getOption("numIterations"));
     double dampingFactor = Double.parseDouble(getOption("dampingFactor"));
+    double tolerance = Double.parseDouble(getOption("tolerance"));
 
     Preconditions.checkArgument(numIterations > 0);
     Preconditions.checkArgument(dampingFactor > 0.0 && dampingFactor <= 1.0);
+    Preconditions.checkArgument(tolerance > 0.0 && tolerance < 1.0);
 
     Path adjacencyMatrixPath = getTempPath(AdjacencyMatrixJob.ADJACENCY_MATRIX);
     Path transitionMatrixPath = getTempPath(TRANSITION_MATRIX);
@@ -135,10 +138,24 @@ abstract class RandomWalk extends AbstractJob {
     Vector seedVector = getSeedVector(numVertices);
 
     /* power method: iterative transition-matrix times ranking-vector multiplication */
-    while (numIterations-- > 0) {
-    	log.debug("Iteration == " + numIterations);
+    int iteration = 1;
+    Vector prevRanking = null;
+    while (iteration <= numIterations) {
+    	log.info("-----------------------------------------------------------------------");
+    	log.info("Iteration : " + iteration + "/" + numIterations);
+    	
       ranking = transitionMatrix.times(ranking);
       ranking = ranking.plus(seedVector.times(1 - dampingFactor));
+      
+      if (prevRanking != null) {
+	      double epsilon = prevRanking.getDistanceSquared(ranking);
+	      log.info("epsilon == " + epsilon + "(tolerance = " + tolerance + ")");
+	     	if (epsilon < tolerance) {
+	     		break;
+	     	} 
+      }
+      prevRanking = ranking.clone();
+      iteration++;
     }
 
     persistVector(getConf(), getTempPath(RANK_VECTOR), ranking);
