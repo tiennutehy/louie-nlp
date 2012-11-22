@@ -28,6 +28,7 @@ import org.apache.mahout.math.DenseVector;
 import org.apache.mahout.math.RandomAccessSparseVector;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
+import org.apache.mahout.math.function.Functions;
 import org.apache.mahout.math.hadoop.DistributedRowMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,12 +45,18 @@ abstract class RandomWalk extends AbstractJob {
 	
 	private static final Logger log = LoggerFactory.getLogger(RandomWalk.class);
 	
+	static final String SEED_VECTOR = "seedVector";
   static final String RANK_VECTOR = "rankVector";
+  static final String TRANSITION_MATRIX = "transitionMatrix";
+  static final String TRANSITION_PLUS_SEED_MATRIX = "transitionPlusSeedMatrix";
 
   static final String NUM_VERTICES_PARAM = AdjacencyMatrixJob.class.getName() + ".numVertices";
   static final String DAMPING_FACTOR_PARAM = AdjacencyMatrixJob.class.getName() + ".dampingFactor";
+  static final String SEED_VECTOR_PARAM = RandomWalk.class.getName() + ".danglingVector";
+  static final String DANGLING_VECTOR_PARAM = DanglingVertexJob.class.getName() + ".danglingVector";
 
-  protected abstract Vector createSeedVector(int numVertices);
+  protected abstract void persistSeedVector(int numVertices) throws IOException;
+  protected abstract Vector getSeedVector(int numVertices)throws IOException ;
 
   protected void addSpecificOptions() {}
   protected void evaluateSpecificOptions(Map<String, List<String>> parsedArgs) {}
@@ -78,11 +85,13 @@ abstract class RandomWalk extends AbstractJob {
     Preconditions.checkArgument(dampingFactor > 0.0 && dampingFactor <= 1.0);
 
     Path adjacencyMatrixPath = getTempPath(AdjacencyMatrixJob.ADJACENCY_MATRIX);
-    Path transitionMatrixPath = getTempPath("transitionMatrix");
+    Path transitionMatrixPath = getTempPath(TRANSITION_MATRIX);
+    Path transitionPlusSeedMatrixPath = getTempPath(TRANSITION_PLUS_SEED_MATRIX);
     Path vertexIndexPath = getTempPath(AdjacencyMatrixJob.VERTEX_INDEX);
     Path numVerticesPath = getTempPath(AdjacencyMatrixJob.NUM_VERTICES);
-    Path danglingVertexPath = getTempPath(DanglingVertexJob.DANGLING_VERTEX);
-
+    Path seedVectorPath = getTempPath(SEED_VECTOR);
+    Path danglingVectorPath = getTempPath(DanglingVertexJob.DANGLING_VECTOR);
+    
     /* create the adjacency matrix */
     ToolRunner.run(getConf(), new AdjacencyMatrixJob(), new String[] { "--vertices", getOption("vertices"),
         "--edges", getOption("edges"), "--output", getTempPath().toString() });
@@ -93,33 +102,42 @@ abstract class RandomWalk extends AbstractJob {
 
     int numVertices = HadoopUtil.readInt(numVerticesPath, getConf());
     Preconditions.checkArgument(numVertices > 0);
+    
+    /* persist seed vector. */
+    persistSeedVector(numVertices);
 
     /* transpose and stochastify the adjacency matrix to create the transition matrix */
     Job createTransitionMatrix = prepareJob(adjacencyMatrixPath, transitionMatrixPath, TransposeMapper.class,
-        IntWritable.class, VectorWritable.class, MergeVectorsReducer.class, IntWritable.class, VectorWritable.class);
-    
-    /* This code should be included for ClassNotFoundException! */
+        IntWritable.class, VectorWritable.class, MergeVectorsReducer.class, IntWritable.class, VectorWritable.class);    
+    // This code should be included for ClassNotFoundException!
     createTransitionMatrix.setJarByClass(RandomWalk.class);
-    
     createTransitionMatrix.setCombinerClass(MergeVectorsCombiner.class);
     createTransitionMatrix.getConfiguration().set(NUM_VERTICES_PARAM, String.valueOf(numVertices));
     createTransitionMatrix.getConfiguration().set(DAMPING_FACTOR_PARAM, String.valueOf(dampingFactor));
     createTransitionMatrix.waitForCompletion(true);
+    
+    /* plus seed-dangling matrix to the transition matrix */
+    Job createTransitionPlusSeedMatrix = prepareJob(transitionMatrixPath, transitionPlusSeedMatrixPath, PlusSeedMatrixMapper.class,
+        IntWritable.class, VectorWritable.class, MergeVectorsReducer.class, IntWritable.class, VectorWritable.class);    
+    createTransitionPlusSeedMatrix.setJarByClass(RandomWalk.class);
+    createTransitionPlusSeedMatrix.setCombinerClass(MergeVectorsCombiner.class);
+    createTransitionPlusSeedMatrix.getConfiguration().set(NUM_VERTICES_PARAM, String.valueOf(numVertices));
+    createTransitionPlusSeedMatrix.getConfiguration().set(DAMPING_FACTOR_PARAM, String.valueOf(dampingFactor));
+    createTransitionPlusSeedMatrix.getConfiguration().set(SEED_VECTOR_PARAM, seedVectorPath.toString());
+    createTransitionPlusSeedMatrix.getConfiguration().set(DANGLING_VECTOR_PARAM, danglingVectorPath.toString());
+    createTransitionPlusSeedMatrix.waitForCompletion(true);
 
-    DistributedRowMatrix transitionMatrix = new DistributedRowMatrix(transitionMatrixPath, getTempPath(),
+    DistributedRowMatrix transitionMatrix = new DistributedRowMatrix(transitionPlusSeedMatrixPath, getTempPath(),
         numVertices, numVertices);
     transitionMatrix.setConf(getConf());
 
     Vector ranking = new DenseVector(numVertices).assign(1.0 / numVertices);
-    Vector seedVector = createSeedVector(numVertices);
-    Vector danglingVector = createDanglingVector(danglingVertexPath, numVertices);
+    Vector seedVector = getSeedVector(numVertices);
 
     /* power method: iterative transition-matrix times ranking-vector multiplication */
     while (numIterations-- > 0) {
     	log.debug("Iteration == " + numIterations);
       ranking = transitionMatrix.times(ranking);
-      ranking = ranking.plus(seedVector.times(danglingVector).times(ranking));
-      ranking = ranking.times(dampingFactor);
       ranking = ranking.plus(seedVector.times(1 - dampingFactor));
     }
 
@@ -132,19 +150,6 @@ abstract class RandomWalk extends AbstractJob {
     vertexWithPageRank.waitForCompletion(true);
 
     return 1;
-  }
-  
-  protected Vector createDanglingVector(Path danglingVertexPath, int numVertices) {
-  	DenseVector danglingVector = new DenseVector(numVertices);
-  	
-    for (Pair<IntWritable,IntWritable> indexAndDangling :
-        new SequenceFileIterable<IntWritable, IntWritable>(danglingVertexPath, true, getConf())) {
-    	int vertexIndex = indexAndDangling.getFirst().get();
-    	int dangling = indexAndDangling.getSecond().get();
-    	danglingVector.setQuick(vertexIndex, dangling);
-    }
-    
-    return danglingVector;
   }
 
   static void persistVector(Configuration conf, Path path, Vector vector) throws IOException {
@@ -161,11 +166,13 @@ abstract class RandomWalk extends AbstractJob {
   static class TransposeMapper extends Mapper<IntWritable,VectorWritable,IntWritable,VectorWritable> {
 
     private int numVertices;
+    private double dampingFactor;
 
     @SuppressWarnings("rawtypes")
 		@Override
     protected void setup(Mapper.Context ctx) throws IOException, InterruptedException {
       numVertices = Integer.parseInt(ctx.getConfiguration().get(NUM_VERTICES_PARAM));
+      dampingFactor = Double.parseDouble(ctx.getConfiguration().get(DAMPING_FACTOR_PARAM));
     }
 
     @Override
@@ -175,6 +182,10 @@ abstract class RandomWalk extends AbstractJob {
       Vector row = v.get();
       /* divide by out-degree */
       row = row.normalize(1);	
+      
+      if (dampingFactor != 1.0) {
+        row.assign(Functions.MULT, dampingFactor);
+      }
 
       Iterator<Vector.Element> it = row.iterateNonZero();
       while (it.hasNext()) {
@@ -184,6 +195,71 @@ abstract class RandomWalk extends AbstractJob {
         r.set(e.index());
         ctx.write(r, new VectorWritable(tmp));
       }
+    }
+  }
+  
+  static class PlusSeedMatrixMapper extends Mapper<IntWritable,VectorWritable,IntWritable,VectorWritable> {
+
+    private int numVertices;
+    private double dampingFactor;
+    private Vector seedVector;
+    private Vector danglingVector;
+
+    @SuppressWarnings("rawtypes")
+		@Override
+    protected void setup(Mapper.Context ctx) throws IOException, InterruptedException {
+    	Configuration conf = ctx.getConfiguration();
+    	
+      numVertices = Integer.parseInt(conf.get(NUM_VERTICES_PARAM));
+      dampingFactor = Double.parseDouble(ctx.getConfiguration().get(DAMPING_FACTOR_PARAM));
+      Path seedVectorPath = new Path(conf.get(SEED_VECTOR_PARAM));
+      Path danglingVectorPath = new Path(conf.get(DANGLING_VECTOR_PARAM));
+      
+      seedVector = getSeedVector(conf, seedVectorPath, numVertices);
+      danglingVector = getDanglingVector(conf, danglingVectorPath, numVertices);
+    }
+
+    @Override
+    protected void map(IntWritable r, VectorWritable v, Context ctx) throws IOException, InterruptedException {
+      int rowIndex = r.get();
+      
+      double seedValue = seedVector.getQuick(rowIndex);
+      Vector weightRowVector = danglingVector.clone();
+      weightRowVector.assign(Functions.MULT, seedValue);
+      
+      if (dampingFactor != 1.0) {
+      	weightRowVector.assign(Functions.MULT, dampingFactor);
+      }
+
+      Vector row = v.get();
+      row.plus(weightRowVector);
+      
+      ctx.write(r, new VectorWritable(row));
+    }
+    
+		private Vector getSeedVector(Configuration conf, Path seedVectorPath, int numVertices) throws IOException {
+			DataInputStream in = null;
+			Vector values;
+			try {
+				in = FileSystem.get(seedVectorPath.toUri(), conf).open(seedVectorPath);
+				values = VectorWritable.readVector(in);
+			} finally {
+				Closeables.closeQuietly(in);
+			}
+			return values;
+		}
+    
+    private Vector getDanglingVector(Configuration conf, Path danglingVectorPath, int numVertices) {
+    	DenseVector danglingVector = new DenseVector(numVertices);
+    	
+      for (Pair<IntWritable,IntWritable> indexAndDangling :
+          new SequenceFileIterable<IntWritable, IntWritable>(danglingVectorPath, true, conf)) {
+      	int vertexIndex = indexAndDangling.getFirst().get();
+      	int dangling = indexAndDangling.getSecond().get();
+      	danglingVector.setQuick(vertexIndex, dangling);
+      }
+      
+      return danglingVector;
     }
   }
 

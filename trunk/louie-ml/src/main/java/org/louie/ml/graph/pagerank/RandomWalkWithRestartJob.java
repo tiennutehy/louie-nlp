@@ -1,5 +1,7 @@
 package org.louie.ml.graph.pagerank;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -15,6 +17,7 @@ import org.apache.mahout.common.HadoopUtil;
 import org.apache.mahout.common.iterator.FileLineIterable;
 import org.apache.mahout.math.DenseVector;
 import org.apache.mahout.math.Vector;
+import org.apache.mahout.math.VectorWritable;
 
 import com.google.common.io.Closeables;
 
@@ -47,10 +50,11 @@ public class RandomWalkWithRestartJob extends RandomWalk {
     ToolRunner.run(new RandomWalkWithRestartJob(), args);
   }
   
-  private Vector loadRestartVector(Path verticesPath, int numVertices, int valueIndex) throws IOException {
+  @Override
+  protected void persistSeedVector(int numVertices) throws IOException {
     FileSystem fs = FileSystem.get(verticesPath.toUri(), getConf());    
     int index = 0;
-    Vector restartVector = new DenseVector(numVertices);
+    Vector seedVector = new DenseVector(numVertices);
     
     for (FileStatus fileStatus : fs.listStatus(verticesPath)) {
       InputStream in = null;
@@ -58,28 +62,34 @@ public class RandomWalkWithRestartJob extends RandomWalk {
         in = HadoopUtil.openStream(fileStatus.getPath(), getConf());
         for (String line : new FileLineIterable(in)) {
         	String[] tokens = SEPARATOR.split(line.toString());
-        	double value = Double.parseDouble(tokens[valueIndex]);
-        	restartVector.setQuick(index++, value);
+        	double value = Double.parseDouble(tokens[vertexValueIndex]);
+        	seedVector.setQuick(index++, value);
         }
       } finally {
         Closeables.closeQuietly(in);
       }
     }
-    
-    return restartVector;
+  	
+  	DataOutputStream out = null;
+    try {
+      out = fs.create(getTempPath(SEED_VECTOR), true);
+      VectorWritable.writeVector(out, seedVector);
+    } finally {
+      Closeables.closeQuietly(out);
+    }
   }
 
   @Override
-  protected Vector createSeedVector(int numVertices) {
-  	try {
-  		Vector seedVector = loadRestartVector(verticesPath, numVertices, vertexValueIndex);
-  		return seedVector;
-  	} catch (IOException e) {
-  		System.err.println(e.getMessage());
-  		e.printStackTrace();
-  	}
-  	
-  	return null;
+  protected Vector getSeedVector(int numVertices) throws IOException {
+  	 DataInputStream in = null;
+     Vector values;
+     try {
+       in = FileSystem.get(getTempPath(SEED_VECTOR).toUri(), getConf()).open(getTempPath(SEED_VECTOR));
+       values = VectorWritable.readVector(in);
+     } finally {
+       Closeables.closeQuietly(in);
+     }
+     return values;
   }
 
   @Override
