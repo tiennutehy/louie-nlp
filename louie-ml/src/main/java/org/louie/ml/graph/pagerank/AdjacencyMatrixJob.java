@@ -131,8 +131,7 @@ public class AdjacencyMatrixJob extends AbstractJob {
           in = HadoopUtil.openStream(fileStatus.getPath(), getConf());
           for (String line : new FileLineIterable(in)) {
           	String[] tokens = SEPARATOR.split(line.toString());
-            writer.append(new IntWritable(index), new IntWritable(Integer.parseInt(tokens[0])));
-            index++;
+            writer.append(new IntWritable(index++), new IntWritable(Integer.parseInt(tokens[0])));
           }
         } finally {
           Closeables.closeQuietly(in);
